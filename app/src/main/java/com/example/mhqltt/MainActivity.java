@@ -23,6 +23,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         String dateCreate= convertDateFormat("04/06/2002");
         String password= "Nguyen Thanh Phong aaa";
         String format= ".doc";
-        int size = 10;
+        int size = 200;
         int dataPosition= 291;
         int state=1;
 
@@ -126,7 +127,15 @@ public class MainActivity extends AppCompatActivity {
                 File dir = getFilesDir();
                 File file = new File(dir, filename);
                 dataPos = fileManager.writeData(pic, file);
+                Log.d("SIZE", String.valueOf(pic.length));
+                Log.d("DONE", String.valueOf(dataPos));
                 byte[] outputArr = fileManager.readData(dataPos, file);
+                try {
+                    fileManager.writeBytesToFile(pic, "goc.txt");
+                    fileManager.writeBytesToFile(outputArr, "sau.txt");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 Bitmap bitmap = BitmapUtil.bytesToBitmap(outputArr);
                 imageView.setImageBitmap(bitmap);
             }
