@@ -19,14 +19,23 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+
+import android.content.ContentResolver;
+import android.database.Cursor;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import android.provider.OpenableColumns;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_SELECT = 1;
@@ -128,6 +137,11 @@ public class MainActivity extends AppCompatActivity {
                 dataPos = fileManager.writeData(pic, file);
                 byte[] outputArr = fileManager.readData(dataPos, file);
                 Bitmap bitmap = BitmapUtil.bytesToBitmap(outputArr);
+                int width = bitmap.getWidth();
+                int height = bitmap.getHeight();
+
+//                int bitDepth = bitmap.getConfig() == Bitmap.Config.ARGB_8888 ? 32 : 16;
+                Log.d("bitmap", "Width: " + width + ", Height: " + height );
                 imageView.setImageBitmap(bitmap);
             }
         });
@@ -142,11 +156,62 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
                 pic = BitmapUtil.bitmapToBytes(bitmap);
                 Log.d("MainActivity", "Bytes: " + pic.length);
+                String fileName = getFileName(selectedImageUri);
+                String dateCreate = getFileCreationDate(selectedImageUri);
+                long fileSize = getFileSize(selectedImageUri);
+                Log.d("MainActivity", "File Size: " + fileSize);
+                Log.d("MainActivity", "Date Create: " + dateCreate);
+                Log.d("MainActivity", "File Name: " + fileName);
+                Log.d("bitmap", "File Name aaa: " + fileName);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
+    private long getFileSize(Uri uri) {
+        long fileSize = -1;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex != -1) {
+                        fileSize = cursor.getLong(sizeIndex);
+                    }
+                }
+            }
+        }
+        return fileSize;
+    }
+
+
+    private String getFileName(Uri uri) {
+        DocumentFile documentFile = DocumentFile.fromSingleUri(this, uri);
+        if (documentFile != null && documentFile.getName() != null) {
+            return documentFile.getName();
+        }
+        return null;
+    }
+
+    private String getFileCreationDate(Uri uri) {
+        ContentResolver contentResolver = getContentResolver();
+        String[] projection = {MediaStore.Images.Media.DATE_TAKEN};
+        try (Cursor cursor = contentResolver.query(uri, projection, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int dateIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
+                if (dateIndex != -1) {
+                    long dateTaken = cursor.getLong(dateIndex);
+                    Date date = new Date(dateTaken);
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                    return formatter.format(date);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "Unknown date";
+    }
+
     private void outputDirectoryEntry(DirectoryEntry directoryEntry) {
         Log.d("TAG", "Name: " + byteArrayToString(directoryEntry.getName()));
         Log.d("TAG", "Format: " + byteArrayToString(directoryEntry.getFormat()));
@@ -157,3 +222,4 @@ public class MainActivity extends AppCompatActivity {
         Log.d("TAG", "State: " + byteArrayToInt(directoryEntry.getState()));
     }
 }
+
