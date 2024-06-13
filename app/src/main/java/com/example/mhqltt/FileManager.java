@@ -3,6 +3,8 @@ package com.example.mhqltt;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,6 +15,8 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FileManager {
     private final Context context;
@@ -24,6 +28,8 @@ public class FileManager {
 
     public void createFile(Header header) {
         File dir = context.getFilesDir();
+
+
         File file = new File(dir, byteArrayToString(header.getType()));
         try {
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
@@ -212,8 +218,9 @@ public class FileManager {
     //cai tien neu co the
     public static boolean isNullByte(byte[] data, int size) {
         for (int i = 0; i < size; i++) {
-            if (data[i] != 0)
+            if (data[i] != 0) {
                 return false;
+            }
         }
         return true;
     }
@@ -241,61 +248,56 @@ public class FileManager {
         return 6;
     }
 
-    public int findEmptySector(File file) {
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
+    public int findEmptySector(File file, Set<Integer> usedSectors) {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             long fileLength = raf.length();
-            raf.seek(512);
+            raf.seek(512L);
             for (int i = 1; i < fileLength / 512; i++) {
-                byte[] sector = new byte[512];
-                raf.read(sector, 0, 512);
-                if (isNullByte(sector, 512))
-                    return i;
+                if (!usedSectors.contains(i)) {
+                    byte[] sector = new byte[512];
+                    raf.seek(512L * i);
+                    raf.read(sector, 0, 512);
+                    if (isNullByte(sector, 512)) {
+                        return i;
+                    }
+                }
             }
-            raf.close();
-            Log.d("File", "File is out of space");
-
-        } catch (FileNotFoundException e) {
-            Log.e("File", "File not found", e);
         } catch (IOException e) {
             Log.e("File", "Error reading file", e);
         }
 
-        return 0;
+        return -1;
     }
 
     public void writeDirectoryEntry(DirectoryEntry directoryEntry, String filename) {
         File dir = context.getFilesDir();
         File file = new File(dir, filename);
-        int sectorPos = 1;
+        Set<Integer> usedSectors = new HashSet<>();
+        int sectorPos = 1;  // Starting sector position for directory entries
         int oldSectorPos = 1;
 
         while (true) {
-            try {
-                RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
                 int entryPos = findEmptyDirectoryEntry(sectorPos, file);
                 if (entryPos == 6) {
-                    byte[] temp = new byte[4];//vi tri tiep theo
+                    byte[] temp = new byte[4];  // Next sector position
                     raf.seek((512L * oldSectorPos + 6 * 80 + 28));
                     raf.read(temp, 0, 4);
 
-                    if (byteArrayToInt(temp) != 0) {
-                        sectorPos = byteArrayToInt(temp);
+                    int nextSectorPos = byteArrayToInt(temp);
+                    if (nextSectorPos != 0) {
+                        sectorPos = nextSectorPos;
                         oldSectorPos = sectorPos;
-                    }
-                    else {
-                        sectorPos = findEmptySector(file);
-                        if (sectorPos == 0) {
-                            raf.close();
-                            break;
-                        }
-                        else {
+                    } else {
+                        sectorPos = findEmptySector(file, usedSectors);
+                        if (sectorPos == -1) {
+                            throw new RuntimeException("No empty sectors available");
+                        } else {
                             raf.seek(512L * oldSectorPos + 6 * 80 + 28);
                             raf.write(intToByteArray(sectorPos));
                             oldSectorPos = sectorPos;
                         }
                     }
-                    raf.close();
                 } else {
                     raf.seek(512L * sectorPos + entryPos * 80L);
                     raf.write(directoryEntry.getName());
@@ -305,7 +307,6 @@ public class FileManager {
                     raf.write(directoryEntry.getSize());
                     raf.write(directoryEntry.getState());
                     raf.write(directoryEntry.getPassword());
-                    raf.close();
                     break;
                 }
             } catch (IOException e) {
@@ -315,43 +316,51 @@ public class FileManager {
     }
 
     public int writeData(byte[] data, File file) {
-        int sectorPos = findEmptySector(file);
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "rw");
-            int offset = 0;
-            int sectorPosTemp = sectorPos;
-            while (offset < data.length) {
-                raf.seek(512L * sectorPosTemp);
-                int writeLength = Math.min(dataSizeInSector, data.length - offset);
-                raf.write(data, offset, writeLength);
-                offset += writeLength;
+        int sectorPos = findEmptySector(file, new HashSet<>());
+        int sectorPosTemp = sectorPos;
+        byte[] buffer = new byte[dataSizeInSector];
+        Set<Integer> usedSectors = new HashSet<>();
 
-                if (offset < data.length) {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
+             ByteArrayInputStream bais = new ByteArrayInputStream(data)) {
+
+            int bytesRead;
+            while ((bytesRead = bais.read(buffer)) != -1) {
+                raf.seek(512L * sectorPosTemp);
+                raf.write(buffer, 0, bytesRead);
+                usedSectors.add(sectorPosTemp);
+
+                if (bais.available() > 0) {
                     raf.seek(512L * sectorPosTemp + 508);
-                    sectorPosTemp = findEmptySector(file);
+                    sectorPosTemp = findEmptySector(file, usedSectors);
+                    if (sectorPosTemp == -1) {
+                        throw new IOException("No empty sectors available");
+                    }
                     raf.write(intToByteArray(sectorPosTemp));
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         return sectorPos;
     }
 
     public byte[] readData(int sectorPos, File file) {
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            ArrayList<Byte> byteArrayList = new ArrayList<>();
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             int sectorPosTemp = sectorPos;
 
             while (true) {
                 byte[] dataCache = new byte[dataSizeInSector];
                 raf.seek(512L * sectorPosTemp);
-                raf.read(dataCache, 0, dataSizeInSector);
+                int bytesRead = raf.read(dataCache, 0, dataSizeInSector);
 
-                for (int i = 0; i < dataSizeInSector; ++i) {
-                    byteArrayList.add(dataCache[i]);
+                if (bytesRead == -1) {
+                    break;
                 }
+
+                byteArrayOutputStream.write(dataCache, 0, bytesRead);
 
                 byte[] nextSectorPos = new byte[4];
                 raf.seek(512L * sectorPosTemp + 508);
@@ -364,12 +373,7 @@ public class FileManager {
                 sectorPosTemp = byteArrayToInt(nextSectorPos);
             }
 
-            byte[] result = new byte[byteArrayList.size()];
-            for (int i = 0; i < byteArrayList.size(); i++) {
-                result[i] = byteArrayList.get(i);
-            }
-            return result;
-
+            return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
