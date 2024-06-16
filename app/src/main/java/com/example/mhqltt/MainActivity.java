@@ -1,5 +1,6 @@
 package com.example.mhqltt;
 
+
 import static com.example.mhqltt.FileManager.convertDateFormat;
 import static com.example.mhqltt.FileManager.padding;
 import static com.example.mhqltt.FileManager.stringToByteArray;
@@ -56,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
                 requestManageExternalStoragePermission();
             }
         }
+
+
+
 
         // Button to select an image
         Button selectImageButton = findViewById(R.id.select_image_button);

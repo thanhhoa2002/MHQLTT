@@ -117,12 +117,12 @@ public class FileManager {
 //            raf.setLength(Integer.parseInt(byteArrayToString(DirectoryEntry.getSize())));
             raf.setLength(byteArrayToInt(directoryEntry.getSize()) * 1048576L);
 
-            raf.seek(pos); // con tro
+            raf.seek(pos*8192); // con tro
             raf.write(directoryEntry.getName());
-            raf.write(directoryEntry.getFormat());
+            raf.write(directoryEntry.getExtendedName());
             raf.write(directoryEntry.getDateCreate());
 
-            raf.write(directoryEntry.getDataPosition());
+            raf.write(directoryEntry.getDataPos());
             raf.write(directoryEntry.getSize());
             raf.write(directoryEntry.getState());
             raf.write(directoryEntry.getPassword());
@@ -133,31 +133,40 @@ public class FileManager {
         }
     }
 
+    public static boolean isNullByte(byte[] data, int size) {
+        for (int i = 0; i < size; i++) {
+            if (data[i] != 0)
+                return false;
+        }
+        return true;
+    }
+
     public DirectoryEntry readDirectoryEntry(String filename) {
         File dir = context.getFilesDir();
         File file = new File(dir, filename);
 
         try {
             RandomAccessFile raf = new RandomAccessFile(file, "r");
-            byte[] name = new byte[28];
-            byte[] format = new byte[5];
-            byte[] dateCreate = new byte[6];
-            byte[] dataPosition = new byte[4];
+            byte[] name = new byte[160];
+            byte[] extendedName = new byte[5];
+            byte[] dateCreate = new byte[4];
+            byte[] dataPos = new byte[4];
             byte[] size = new byte[4];
             byte[] state = new byte[1];
             byte[] password = new byte[32];
 
-            raf.read(name, 0, 28);
-            raf.read(format, 0, 5);
-            raf.read(dateCreate, 0, 6);
-            raf.read(dataPosition, 0, 4);
+
+            raf.read(name, 0, 160);
+            raf.read(extendedName, 0, 5);
+            raf.read(dateCreate, 0, 4);
+            raf.read(dataPos, 0, 4);
             raf.read(size, 0, 4);
             raf.read(state, 0, 1);
             raf.read(password, 0, 32);
 
             raf.close();
 
-            return new DirectoryEntry(name, format, dateCreate, dataPosition, size, state, password);
+            return new DirectoryEntry(name, extendedName, dateCreate, dataPos, size, state, password);
         } catch (FileNotFoundException e) {
             Log.e("File", "File not found", e);
         } catch (IOException e) {
@@ -196,5 +205,71 @@ public class FileManager {
         ByteBuffer wrapped = ByteBuffer.wrap(bytes);
         return wrapped.getInt();
     }
+    public int findEmptyDirectoryEntry(int posSectorAvailable, String filename) {
+        File dir = context.getFilesDir();
+        File file = new File(dir, filename);
+        try {
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            raf.seek(8192L * posSectorAvailable);
+            for (int i = 0; i < 32; i++) {
+                byte[] directoryEntry = new byte[256];
+                raf.read(directoryEntry, 0, 256);
+                if (isNullByte(directoryEntry, 256))
+                    return i;
+            }
+            raf.close();
+
+
+        } catch (FileNotFoundException e) {
+            Log.e("File", "File not found", e);
+        } catch (IOException e) {
+            Log.e("File", "Error reading file", e);
+        }
+
+        return 32;
+    }
+
+    public int findEmptySector(String filename) {
+        File dir = context.getFilesDir();
+        File file = new File(dir, filename);
+        try {
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            long fileLength = raf.length();
+            raf.seek(512);
+            for (int i = 1; i < fileLength / 8192; i++) {
+                byte[] sector = new byte[8192];
+                raf.read(sector, 0, 8192);
+                if (isNullByte(sector, 8192))
+                    return i;
+            }
+            raf.close();
+            Log.d("File", "File is out of space");
+
+        } catch (FileNotFoundException e) {
+            Log.e("File", "File not found", e);
+        } catch (IOException e) {
+            Log.e("File", "Error reading file", e);
+        }
+
+        return 0;
+    }
+
+    public void writeDirectoryEntry(DirectoryEntry directoryEntry, String filename) {
+        File dir = context.getFilesDir();
+        File file = new File(dir, filename);
+
+        while (true) {
+            try {
+                RandomAccessFile raf = new RandomAccessFile(file, "rw");
+                
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }
+
+
 
