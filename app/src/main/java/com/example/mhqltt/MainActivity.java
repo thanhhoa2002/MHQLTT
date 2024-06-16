@@ -1,7 +1,7 @@
 package com.example.mhqltt;
 
 
-import static com.example.mhqltt.FileManager.convertDateFormat;
+//import static com.example.mhqltt.FileManager.convertDateFormat;
 import static com.example.mhqltt.FileManager.padding;
 import static com.example.mhqltt.FileManager.stringToByteArray;
 import static com.example.mhqltt.FileManager.byteArrayToString;
@@ -24,9 +24,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -35,6 +37,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+
+import android.content.ContentResolver;
+import android.database.Cursor;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import android.provider.OpenableColumns;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_SELECT = 1;
@@ -77,8 +86,22 @@ public class MainActivity extends AppCompatActivity {
         convertButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Log.d("SIZE", String.valueOf(pic.length));
                 Log.d("DONE", String.valueOf(dataPos));
+                String filename= "test.txt";
+                File dir = getFilesDir();
+                File file = new File(dir, filename);
+                dataPos = fileManager.writeData(pic, file);
+                byte[] outputArr = fileManager.readData(dataPos, file);
+                Bitmap bitmap = BitmapUtil.bytesToBitmap(outputArr);
+                int width = bitmap.getWidth();
+                int height = bitmap.getHeight();
+
+//                int bitDepth = bitmap.getConfig() == Bitmap.Config.ARGB_8888 ? 32 : 16;
+                Log.d("bitmap", "Width: " + width + ", Height: " + height );
+                imageView.setImageBitmap(bitmap);
+
             }
         });
     }
@@ -95,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_SELECT && resultCode == Activity.RESULT_OK && data != null) {
             Uri selectedImageUri = data.getData();
+
             String imagePath = getRealPathFromURI(selectedImageUri);
             Log.d("PATH", imagePath);
             if (imagePath != null) {
@@ -115,22 +139,64 @@ public class MainActivity extends AppCompatActivity {
                     // Quyền truy cập không được cấp
                     Log.d("TAG", "onActivityResult: ");
                 }
+
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
+                    pic = BitmapUtil.bitmapToBytes(bitmap);
+                    Log.d("MainActivity", "Bytes: " + pic.length);
+                    String fileName = getFileName(selectedImageUri);
+                    String dateCreate = getFileCreationDate(selectedImageUri);
+                    long fileSize = getFileSize(selectedImageUri);
+                    Log.d("MainActivity", "File Size: " + fileSize);
+                    Log.d("MainActivity", "Date Create: " + dateCreate);
+                    Log.d("MainActivity", "File Name: " + fileName);
+                    Log.d("bitmap", "File Name aaa: " + fileName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+
+                }
+            }
+        }
+
+
+        private String getRealPathFromURI (Uri contentUri){
+            String[] proj = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+            if (cursor != null) {
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                cursor.moveToFirst();
+                String path = cursor.getString(column_index);
+                cursor.close();
+                return path;
             }
         }
     }
 
-    private String getRealPathFromURI(Uri contentUri) {
-        String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-        if (cursor != null) {
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            String path = cursor.getString(column_index);
-            cursor.close();
-            return path;
+    private long getFileSize(Uri uri) {
+        long fileSize = -1;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex != -1) {
+                        fileSize = cursor.getLong(sizeIndex);
+                    }
+                }
+            }
+        }
+        return fileSize;
+    }
+
+
+    private String getFileName(Uri uri) {
+        DocumentFile documentFile = DocumentFile.fromSingleUri(this, uri);
+        if (documentFile != null && documentFile.getName() != null) {
+            return documentFile.getName();
+
         }
         return null;
     }
+
 
     private byte[] readFileToBytes(File file) throws IOException {
         FileInputStream fileInputStream = new FileInputStream(file);
@@ -142,5 +208,35 @@ public class MainActivity extends AppCompatActivity {
         }
         fileInputStream.close();
         return byteArrayOutputStream.toByteArray();
+
+    private String getFileCreationDate(Uri uri) {
+        ContentResolver contentResolver = getContentResolver();
+        String[] projection = {MediaStore.Images.Media.DATE_TAKEN};
+        try (Cursor cursor = contentResolver.query(uri, projection, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int dateIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
+                if (dateIndex != -1) {
+                    long dateTaken = cursor.getLong(dateIndex);
+                    Date date = new Date(dateTaken);
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                    return formatter.format(date);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "Unknown date";
+    }
+
+    private void outputDirectoryEntry(DirectoryEntry directoryEntry) {
+        Log.d("TAG", "Name: " + byteArrayToString(directoryEntry.getName()));
+        Log.d("TAG", "Format: " + byteArrayToString(directoryEntry.getFormat()));
+        Log.d("TAG", "Size: " + byteArrayToInt(directoryEntry.getSize()));
+        Log.d("TAG", "Date create: " + byteArrayToString(directoryEntry.getDateCreate()));
+        Log.d("TAG", "Data position: " + byteArrayToInt(directoryEntry.getDataPosition()));
+        Log.d("TAG", "Password: " + byteArrayToString(directoryEntry.getPassword()));
+        Log.d("TAG", "State: " + byteArrayToInt(directoryEntry.getState()));
+
     }
 }
+

@@ -16,8 +16,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import android.net.Uri;
+import androidx.documentfile.provider.DocumentFile;
+
 
 public class FileManager {
     private final Context context;
@@ -269,6 +274,72 @@ public class FileManager {
             }
         }
     }
+
+
+    public int writeData(byte[] data, File file) {
+        int sectorPos = findEmptySector(file);
+        try {
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            int offset = 0;
+            int sectorPosTemp = sectorPos;
+            while (offset < data.length) {
+                raf.seek(512L * sectorPosTemp);
+                int writeLength = Math.min(dataSizeInSector, data.length - offset);
+                raf.write(data, offset, writeLength);
+                offset += writeLength;
+
+                if (offset < data.length) {
+                    raf.seek(512L * sectorPosTemp + 508);
+                    sectorPosTemp = findEmptySector(file);
+                    raf.write(intToByteArray(sectorPosTemp));
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return sectorPos;
+    }
+
+    public byte[] readData(int sectorPos, File file) {
+        try {
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            ArrayList<Byte> byteArrayList = new ArrayList<>();
+            int sectorPosTemp = sectorPos;
+
+            while (true) {
+                byte[] dataCache = new byte[dataSizeInSector];
+                raf.seek(512L * sectorPosTemp);
+                raf.read(dataCache, 0, dataSizeInSector);
+
+                for (int i = 0; i < dataSizeInSector; ++i) {
+                    byteArrayList.add(dataCache[i]);
+                }
+
+                byte[] nextSectorPos = new byte[4];
+                raf.seek(512L * sectorPosTemp + 508);
+                raf.read(nextSectorPos, 0, 4);
+
+                if (byteArrayToInt(nextSectorPos) == 0) {
+                    break;
+                }
+
+                sectorPosTemp = byteArrayToInt(nextSectorPos);
+            }
+
+            byte[] result = new byte[byteArrayList.size()];
+            for (int i = 0; i < byteArrayList.size(); i++) {
+                result[i] = byteArrayList.get(i);
+            }
+            return result;
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+
 }
 
 
