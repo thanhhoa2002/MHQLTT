@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 public class Header {
     private byte[] type;
-    private byte[] size; //KB = *1024
+    private byte[] size; //KB = *1024 //25.165.824 = 24GB
     private byte[] password;
     private byte[] dateCreate;
     private byte[] dateModify;

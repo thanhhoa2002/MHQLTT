@@ -14,84 +14,98 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 public class FileManager {
     private final Context context;
-    static int dataSizeInSector = 507;
+
 
     public FileManager(Context context) {
         this.context = context;
     }
 
-    public void createFile(Header header) {
+    public static void getCurrentDateTimeInBytes(byte[] date, byte[] time) {
+        Calendar calendar = Calendar.getInstance();
+
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int month = calendar.get(Calendar.MONTH) + 1; // Tháng bắt đầu từ 0
+        int year = calendar.get(Calendar.YEAR);
+
+        byte[] yearBytes = intToByteArray(year);
+
+        date[0] = (byte) day;
+        date[1] = (byte) month;
+        date[2] = yearBytes[2];
+        date[3] = yearBytes[3];
+
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        int second = calendar.get(Calendar.SECOND);
+
+        time[0] = (byte) hour;
+        time[1] = (byte) minute;
+        time[2] = (byte) second;
+    }
+
+    public static int bytesToYear(byte high, byte low) {
+        return ((high & 0xFF) << 8) | (low & 0xFF);
+    }
+
+    public Header createHeader() {
+        Header header = new Header();
+
+        String password = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        // input password and hash
+        String ownerSign = "aaaaaaaaaa";
+        // input owner sign
+
+        byte[] date = new byte[4];
+        byte[] time = new byte[3];
+        getCurrentDateTimeInBytes(date, time);
+
+        header.setType(stringToByteArray(".NEW"));
+        header.setSize(intToByteArray(25165824));
+        header.setPassword(stringToByteArray(password));
+        header.setDateCreate(date);
+        header.setDateModify(date);
+        header.setTimeCreate(time);
+        header.setTimeModify(time);
+        header.setOwnerSign(stringToByteArray(ownerSign));
+
+        return header;
+    }
+
+    public void createFile() {
+        Header header = createHeader();
+
         File dir = context.getFilesDir();
-
-
         File file = new File(dir, byteArrayToString(header.getType()));
+
         try {
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
-            raf.setLength((long) byteArrayToInt(header.getSize()) * 1048576);
+            raf.setLength((long)byteArrayToInt(header.getSize()) * 1024);
+
+            // Header
             raf.seek(0);
+
             raf.write(header.getType());
             raf.write(header.getSize());
             raf.write(header.getPassword());
+            raf.write(header.getDateCreate());
+            raf.write(header.getDateModify());
+            raf.write(header.getTimeCreate());
+            raf.write(header.getTimeModify());
+            raf.write(header.getOwnerSign());
+
             raf.close();
-            Log.d("File", "File created successfully with header");
+            Log.d("File", "File created successfully");
         } catch (IOException e) {
             Log.e("File", "Error creating file", e);
         }
     }
-
-    public Header readHeader(String filename) {
-        Header header = new Header();
-        File dir = context.getFilesDir();
-        File file = new File(dir, filename);
-
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            byte[] type = new byte[4];
-            byte[] size = new byte[4];
-            byte[] password = new byte[32];
-
-            raf.read(type, 0, 4);
-            raf.read(size, 0, 4);
-            raf.read(password, 0, 32);
-            raf.close();
-
-            header.setType(type);
-            header.setSize(size);
-            header.setPassword(password);
-            return header;
-        } catch (FileNotFoundException e) {
-            Log.e("File", "File not found", e);
-        } catch (IOException e) {
-            Log.e("File", "Error reading file", e);
-        }
-        return null;
-    }
-
-    public void writeBytesToFile(byte[] bytes, String fileName) throws IOException {
-        File dir = context.getFilesDir();
-        File file = new File(dir, fileName);
-        RandomAccessFile raf = new RandomAccessFile(file, "rw");
-        raf.write(bytes);
-        raf.close();
-    }
-
-    public byte[] readBytesFromFile(String fileName) throws IOException {
-        File dir = context.getFilesDir();
-        File file = new File(dir, fileName);
-        RandomAccessFile raf = new RandomAccessFile(file, "r");
-        long fileLength = raf.length();
-        byte[] bytes = new byte[(int) fileLength];
-        raf.read(bytes);
-        raf.close();
-        return bytes;
-    }
-
 
     //test
     public void writeFileDirectoryEntry(DirectoryEntry directoryEntry, int pos) {
@@ -152,31 +166,6 @@ public class FileManager {
         return null;
     }
 
-    public static boolean isValidDate(String date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        sdf.setLenient(false);
-
-        try {
-            sdf.parse(date);
-            return true;
-        } catch (ParseException e) {
-            return false;
-        }
-    }
-
-    public static String convertDateFormat(String date) {
-        SimpleDateFormat inputFormat = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat outputFormat = new SimpleDateFormat("ddMMyy");
-        inputFormat.setLenient(false);
-
-        try {
-            Date parsedDate = inputFormat.parse(date);
-            return outputFormat.format(parsedDate);
-        } catch (ParseException e) {
-            return null;
-        }
-    }
-
     public static byte[] padding(byte[] data, int size) {
         int sizeData = data.length;
         byte[] dataPadding = new byte[size];
@@ -206,177 +195,6 @@ public class FileManager {
     public static int byteArrayToInt(byte[] bytes) {
         ByteBuffer wrapped = ByteBuffer.wrap(bytes);
         return wrapped.getInt();
-    }
-
-    public static void allocateSector(byte[] data) {
-
-        for (int i = 0; i < 512; i++) {
-            data[i] = 0;
-        }
-    }
-
-    //cai tien neu co the
-    public static boolean isNullByte(byte[] data, int size) {
-        for (int i = 0; i < size; i++) {
-            if (data[i] != 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-
-    public int findEmptyDirectoryEntry(int posSectorAvailable, File file) {
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            raf.seek(512L * posSectorAvailable);
-            for (int i = 0; i < 6; i++) {
-                byte[] directoryEntry = new byte[80];
-                raf.read(directoryEntry, 0, 80);
-                if (isNullByte(directoryEntry, 80))
-                    return i;
-            }
-            raf.close();
-
-
-        } catch (FileNotFoundException e) {
-            Log.e("File", "File not found", e);
-        } catch (IOException e) {
-            Log.e("File", "Error reading file", e);
-        }
-
-        return 6;
-    }
-
-    public int findEmptySector(File file, Set<Integer> usedSectors) {
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            long fileLength = raf.length();
-            raf.seek(512L);
-            for (int i = 1; i < fileLength / 512; i++) {
-                if (!usedSectors.contains(i)) {
-                    byte[] sector = new byte[512];
-                    raf.seek(512L * i);
-                    raf.read(sector, 0, 512);
-                    if (isNullByte(sector, 512)) {
-                        return i;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            Log.e("File", "Error reading file", e);
-        }
-
-        return -1;
-    }
-
-    public void writeDirectoryEntry(DirectoryEntry directoryEntry, String filename) {
-        File dir = context.getFilesDir();
-        File file = new File(dir, filename);
-        Set<Integer> usedSectors = new HashSet<>();
-        int sectorPos = 1;  // Starting sector position for directory entries
-        int oldSectorPos = 1;
-
-        while (true) {
-            try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                int entryPos = findEmptyDirectoryEntry(sectorPos, file);
-                if (entryPos == 6) {
-                    byte[] temp = new byte[4];  // Next sector position
-                    raf.seek((512L * oldSectorPos + 6 * 80 + 28));
-                    raf.read(temp, 0, 4);
-
-                    int nextSectorPos = byteArrayToInt(temp);
-                    if (nextSectorPos != 0) {
-                        sectorPos = nextSectorPos;
-                        oldSectorPos = sectorPos;
-                    } else {
-                        sectorPos = findEmptySector(file, usedSectors);
-                        if (sectorPos == -1) {
-                            throw new RuntimeException("No empty sectors available");
-                        } else {
-                            raf.seek(512L * oldSectorPos + 6 * 80 + 28);
-                            raf.write(intToByteArray(sectorPos));
-                            oldSectorPos = sectorPos;
-                        }
-                    }
-                } else {
-                    raf.seek(512L * sectorPos + entryPos * 80L);
-                    raf.write(directoryEntry.getName());
-                    raf.write(directoryEntry.getFormat());
-                    raf.write(directoryEntry.getDateCreate());
-                    raf.write(directoryEntry.getDataPosition());
-                    raf.write(directoryEntry.getSize());
-                    raf.write(directoryEntry.getState());
-                    raf.write(directoryEntry.getPassword());
-                    break;
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    public int writeData(byte[] data, File file) {
-        int sectorPos = findEmptySector(file, new HashSet<>());
-        int sectorPosTemp = sectorPos;
-        byte[] buffer = new byte[dataSizeInSector];
-        Set<Integer> usedSectors = new HashSet<>();
-
-        try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
-             ByteArrayInputStream bais = new ByteArrayInputStream(data)) {
-
-            int bytesRead;
-            while ((bytesRead = bais.read(buffer)) != -1) {
-                raf.seek(512L * sectorPosTemp);
-                raf.write(buffer, 0, bytesRead);
-                usedSectors.add(sectorPosTemp);
-
-                if (bais.available() > 0) {
-                    raf.seek(512L * sectorPosTemp + 508);
-                    sectorPosTemp = findEmptySector(file, usedSectors);
-                    if (sectorPosTemp == -1) {
-                        throw new IOException("No empty sectors available");
-                    }
-                    raf.write(intToByteArray(sectorPosTemp));
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return sectorPos;
-    }
-
-    public byte[] readData(int sectorPos, File file) {
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            int sectorPosTemp = sectorPos;
-
-            while (true) {
-                byte[] dataCache = new byte[dataSizeInSector];
-                raf.seek(512L * sectorPosTemp);
-                int bytesRead = raf.read(dataCache, 0, dataSizeInSector);
-
-                if (bytesRead == -1) {
-                    break;
-                }
-
-                byteArrayOutputStream.write(dataCache, 0, bytesRead);
-
-                byte[] nextSectorPos = new byte[4];
-                raf.seek(512L * sectorPosTemp + 508);
-                raf.read(nextSectorPos, 0, 4);
-
-                if (byteArrayToInt(nextSectorPos) == 0) {
-                    break;
-                }
-
-                sectorPosTemp = byteArrayToInt(nextSectorPos);
-            }
-
-            return byteArrayOutputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
 
