@@ -1,6 +1,7 @@
 package com.example.mhqltt;
 
 import android.content.Context;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.ByteArrayInputStream;
@@ -18,10 +19,15 @@ import java.util.Calendar;
 import java.util.Date;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import android.net.Uri;
 import androidx.documentfile.provider.DocumentFile;
+
+import android.database.Cursor;
+import android.content.ContentResolver;
+import android.provider.OpenableColumns;
 
 
 public class FileManager {
@@ -81,6 +87,29 @@ public class FileManager {
         header.setOwnerSign(stringToByteArray(ownerSign));
 
         return header;
+    }
+    // de test
+    public DirectoryEntry createDirectoryEntry(){
+        DirectoryEntry directoryEntry = new DirectoryEntry();
+        String name= "Bao cao do an tot nghiep";
+        byte[] date = new byte[4];
+        byte[] time = new byte[3];
+        getCurrentDateTimeInBytes(date, time);
+        String password= "Nguyen Thanh Phong aaa";
+        String extendedName= ".doc";
+        int size = 20;
+        int dataPosition= 291;
+        int state=1;
+        directoryEntry = new DirectoryEntry(
+                padding(FileManager.stringToByteArray(name), 160),
+                padding(FileManager.stringToByteArray(extendedName), 5),
+                date,
+                padding(FileManager.intToByteArray(dataPosition), 4),
+                padding(FileManager.intToByteArray(size), 4),
+                padding(FileManager.intToByteArray(state), 1),
+                padding(FileManager.stringToByteArray(password), 32)
+        );
+        return directoryEntry;
     }
 
     public void createFile() {
@@ -262,11 +291,29 @@ public class FileManager {
     public void writeDirectoryEntry(DirectoryEntry directoryEntry, String filename) {
         File dir = context.getFilesDir();
         File file = new File(dir, filename);
-
+        Log.d("Tag","vao day ");
         while (true) {
             try {
                 RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                
+                raf.seek(8192*6);
+                byte[] temp=new byte[256];
+                while (true)
+                {
+                    raf.read(temp,0,256);
+                    if (isNullByte(temp,256)==true)
+                    {
+                        raf.write(directoryEntry.getName());
+                        raf.write(directoryEntry.getExtendedName());
+                        raf.write(directoryEntry.getDateCreate());
+                        raf.write(directoryEntry.getDataPos());
+                        raf.write(directoryEntry.getSize());
+                        raf.write(directoryEntry.getState());
+                        raf.write(directoryEntry.getPassword());
+                        Log.d("Tag","writeDirectoryEntry ");
+                        break;
+                    }
+                }
+                break;
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             } catch (IOException e) {
@@ -276,71 +323,6 @@ public class FileManager {
     }
 
 
-    public int writeData(byte[] data, File file) {
-        int sectorPos = findEmptySector(file);
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "rw");
-            int offset = 0;
-            int sectorPosTemp = sectorPos;
-            while (offset < data.length) {
-                raf.seek(512L * sectorPosTemp);
-                int writeLength = Math.min(dataSizeInSector, data.length - offset);
-                raf.write(data, offset, writeLength);
-                offset += writeLength;
-
-                if (offset < data.length) {
-                    raf.seek(512L * sectorPosTemp + 508);
-                    sectorPosTemp = findEmptySector(file);
-                    raf.write(intToByteArray(sectorPosTemp));
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return sectorPos;
-    }
-
-    public byte[] readData(int sectorPos, File file) {
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            ArrayList<Byte> byteArrayList = new ArrayList<>();
-            int sectorPosTemp = sectorPos;
-
-            while (true) {
-                byte[] dataCache = new byte[dataSizeInSector];
-                raf.seek(512L * sectorPosTemp);
-                raf.read(dataCache, 0, dataSizeInSector);
-
-                for (int i = 0; i < dataSizeInSector; ++i) {
-                    byteArrayList.add(dataCache[i]);
-                }
-
-                byte[] nextSectorPos = new byte[4];
-                raf.seek(512L * sectorPosTemp + 508);
-                raf.read(nextSectorPos, 0, 4);
-
-                if (byteArrayToInt(nextSectorPos) == 0) {
-                    break;
-                }
-
-                sectorPosTemp = byteArrayToInt(nextSectorPos);
-            }
-
-            byte[] result = new byte[byteArrayList.size()];
-            for (int i = 0; i < byteArrayList.size(); i++) {
-                result[i] = byteArrayList.get(i);
-            }
-            return result;
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
 
 
 }
-
-
-
