@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -322,7 +323,17 @@ public class FileManager {
         }
     }
 
-
+    public byte[] readFileToBytes(File file) throws IOException {
+        FileInputStream fileInputStream = new FileInputStream(file);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+            byteArrayOutputStream.write(buffer, 0, bytesRead);
+        }
+        fileInputStream.close();
+        return byteArrayOutputStream.toByteArray();
+    }
 
 
 }

@@ -9,6 +9,7 @@ import static com.example.mhqltt.FileManager.byteArrayToInt;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -46,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private byte[] pic = null;
     private FileManager fileManager;
+
+    private Context context;
+    UriFileHelper uriFileHelper = new UriFileHelper(context);
 
     int dataPos = 0;
 
@@ -100,16 +104,16 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_SELECT && resultCode == Activity.RESULT_OK && data != null) {
             Uri selectedImageUri = data.getData();
-            String imagePath = getRealPathFromURI(selectedImageUri);
+            String imagePath = uriFileHelper.getRealPathFromURI(selectedImageUri);
             Log.d("PATH", imagePath);
             if (imagePath != null) {
                 File imageFile = new File(imagePath);
                 try {
-                    pic = readFileToBytes(imageFile);
+                    pic = fileManager.readFileToBytes(imageFile);
                     Log.d("PIC", "Bytes: " + pic.length);
-                    String fileName = getFileName(selectedImageUri);
-                    String creationDate = getFileCreationDate(selectedImageUri);
-                    long fileSize = getFileSize(selectedImageUri);
+                    String fileName = uriFileHelper.getFileName(selectedImageUri);
+                    String creationDate = uriFileHelper.getFileCreationDate(selectedImageUri);
+                    long fileSize = uriFileHelper.getFileSize(selectedImageUri);
                     Log.d("MainActivity", "File Name: " + fileName);
                     Log.d("MainActivity", "Creation Date: " + creationDate);
                     Log.d("MainActivity", "File Size: " + fileSize + " bytes");
@@ -129,87 +133,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-    private String getRealPathFromURI(Uri contentUri) {
-        String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-        if (cursor != null) {
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            String path = cursor.getString(column_index);
-            cursor.close();
-            return path;
-        }
-        return null;
-    }
-
-    private byte[] readFileToBytes(File file) throws IOException {
-        FileInputStream fileInputStream = new FileInputStream(file);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-            byteArrayOutputStream.write(buffer, 0, bytesRead);
-        }
-        fileInputStream.close();
-        return byteArrayOutputStream.toByteArray();
-    }
-
-
-    private String getFileName(Uri uri) {
-        String result = null;
-        if (uri.getScheme().equals("content")) {
-            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                    if (nameIndex != -1) {
-                        result = cursor.getString(nameIndex);
-                    }
-                }
-            }
-        }
-        if (result == null) {
-            result = uri.getPath();
-            int cut = result != null ? result.lastIndexOf('/') : -1;
-            if (cut != -1) {
-                result = result.substring(cut + 1);
-            }
-        }
-        return result;
-    }
-
-    private String getFileCreationDate(Uri uri) {
-        ContentResolver contentResolver = getContentResolver();
-        String[] projection = {MediaStore.Images.Media.DATE_TAKEN};
-        try (Cursor cursor = contentResolver.query(uri, projection, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                int dateIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
-                if (dateIndex != -1) {
-                    long dateTaken = cursor.getLong(dateIndex);
-                    Date date = new Date(dateTaken);
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                    return formatter.format(date);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "Unknown date";
-    }
-
-    private long getFileSize(Uri uri) {
-        long fileSize = -1;
-        if (uri.getScheme().equals("content")) {
-            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
-                    if (sizeIndex != -1) {
-                        fileSize = cursor.getLong(sizeIndex);
-                    }
-                }
-            }
-        }
-        return fileSize;
-    }
-
 }
