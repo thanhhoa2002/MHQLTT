@@ -2,28 +2,28 @@ package com.example.mhqltt;
 
 public class DirectoryEntry {
     private byte[] name;
-    private byte[] format;
+    private byte[] extendedName;
     private byte[] dateCreate;
-    private byte[] dataPosition;
+    private byte[] dataPos;
     private byte[] size;
     private byte[] state;
     private byte[] password;
 
     public DirectoryEntry() {
-        name = new byte[28];
-        format = new byte[5];
-        dateCreate = new byte[6];
-        dataPosition = new byte[4];
+        name = new byte[160];
+        extendedName = new byte[5];
+        dateCreate = new byte[4];
+        dataPos = new byte[4];
         size = new byte[4];
         state = new byte[1];
         password = new byte[32];
     }
 
-    public DirectoryEntry(byte[] name, byte[] format, byte[] dateCreate, byte[] dataPosition, byte[] size, byte[] state, byte[] password) {
+    public DirectoryEntry(byte[] name, byte[] extendedName, byte[] dateCreate, byte[] dataPos, byte[] size, byte[] state, byte[] password) {
         this.name = name;
-        this.format = format;
+        this.extendedName = extendedName;
         this.dateCreate = dateCreate;
-        this.dataPosition = dataPosition;
+        this.dataPos = dataPos;
         this.size = size;
         this.state = state;
         this.password = password;
@@ -37,12 +37,12 @@ public class DirectoryEntry {
         this.name = name;
     }
 
-    public byte[] getFormat() {
-        return format;
+    public byte[] getExtendedName() {
+        return extendedName;
     }
 
-    public void setFormat(byte[] format) {
-        this.format = format;
+    public void setExtendedName(byte[] extendedName) {
+        this.extendedName = extendedName;
     }
 
     public byte[] getDateCreate() {
@@ -53,12 +53,12 @@ public class DirectoryEntry {
         this.dateCreate = dateCreate;
     }
 
-    public byte[] getDataPosition() {
-        return dataPosition;
+    public byte[] getDataPos() {
+        return dataPos;
     }
 
-    public void setDataPosition(byte[] dataPosition) {
-        this.dataPosition = dataPosition;
+    public void setDataPos(byte[] dataPos) {
+        this.dataPos = dataPos;
     }
 
     public byte[] getSize() {

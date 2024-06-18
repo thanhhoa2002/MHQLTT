@@ -1,6 +1,6 @@
 package com.example.mhqltt;
 
-import static com.example.mhqltt.FileManager.convertDateFormat;
+//import static com.example.mhqltt.FileManager.convertDateFormat;
 import static com.example.mhqltt.FileManager.padding;
 import static com.example.mhqltt.FileManager.stringToByteArray;
 import static com.example.mhqltt.FileManager.byteArrayToString;
@@ -8,6 +8,7 @@ import static com.example.mhqltt.FileManager.intToByteArray;
 import static com.example.mhqltt.FileManager.byteArrayToInt;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -17,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +36,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_SELECT = 1;
@@ -50,76 +55,16 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         fileManager = new FileManager(this);
-
+        fileManager.createFile();
+        String filename="/.NEW";
+        DirectoryEntry directoryEntry= fileManager.createDirectoryEntry();
+        fileManager.writeDirectoryEntry(directoryEntry,filename);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 requestManageExternalStoragePermission();
             }
         }
 
-        Header header = new Header();
-        String typeString = ".new";
-        String passwordString = "123456";
-        int sizeInt = 10  ; // MB
-        header = new Header(
-                padding(stringToByteArray(typeString), 4),
-                padding(intToByteArray(sizeInt), 4),
-                padding(stringToByteArray(passwordString), 32));
-        fileManager.createFile(header);
-        Header header2 = fileManager.readHeader(".new");
-        Log.d("TAG", byteArrayToString(header2.getType()));
-        Log.d("TAG", byteArrayToString(header2.getPassword()));
-        Log.d("TAG", String.valueOf(byteArrayToInt((header2.getSize()))));
-
-        // Entry table test
-        DirectoryEntry directoryEntry = new DirectoryEntry();
-        String name= "Bao cao do an tot nghiep";
-        String dateCreate= convertDateFormat("04/06/2002");
-        String password= "Nguyen Thanh Phong aaa";
-        String format= ".doc";
-        int size = 20;
-        int dataPosition= 291;
-        int state=1;
-
-        directoryEntry = new DirectoryEntry(
-                padding(FileManager.stringToByteArray(name), 28),
-                padding(FileManager.stringToByteArray(format), 5),
-                padding(FileManager.stringToByteArray(dateCreate), 6),
-                padding(FileManager.intToByteArray(dataPosition), 4),
-                padding(FileManager.intToByteArray(size), 4),
-                padding(FileManager.intToByteArray(state), 1),
-                padding(FileManager.stringToByteArray(password), 32)
-        );
-//        outputDirectoryEntry(directoryEntry);
-
-        fileManager.writeFileDirectoryEntry(directoryEntry,0);
-        Log.d("TAG","Something");
-        String filename = FileManager.byteArrayToString(directoryEntry.getName());
-
-        DirectoryEntry directoryEntry2 = fileManager.readDirectoryEntry(filename);
-
-//        if (DirectoryEntry2 != null) {
-//            outputDirectoryEntry(DirectoryEntry2);
-//        }
-
-        DirectoryEntry directoryEntry1 = new DirectoryEntry();
-        String name1= "Sector 2";
-        String dateCreate1= "060624";
-        String password1= "Le Anh Vinh ";
-        String format1= ".pdf";
-        int size1 = 1024;
-        int dataPosition1=144;
-        int state1=1;
-        directoryEntry1 = new DirectoryEntry(
-                padding(FileManager.stringToByteArray(name1), 32),
-                padding(FileManager.stringToByteArray(format1), 5),
-                padding(FileManager.stringToByteArray(dateCreate1), 2),
-                padding(FileManager.intToByteArray(dataPosition1), 4),
-                padding(FileManager.intToByteArray(size1), 4),
-                padding(FileManager.intToByteArray(state1), 1),
-                padding(FileManager.stringToByteArray(password1), 32)
-        );
-        fileManager.writeDirectoryEntry(directoryEntry1,filename);
 
         // Button to select an image
         Button selectImageButton = findViewById(R.id.select_image_button);
@@ -137,12 +82,8 @@ public class MainActivity extends AppCompatActivity {
         convertButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File dir = getFilesDir();
-                File file = new File(dir, filename);
-                dataPos = fileManager.writeData(pic, file);
                 Log.d("SIZE", String.valueOf(pic.length));
                 Log.d("DONE", String.valueOf(dataPos));
-                byte[] outputArr = fileManager.readData(dataPos, file);
             }
         });
     }
@@ -166,6 +107,12 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     pic = readFileToBytes(imageFile);
                     Log.d("PIC", "Bytes: " + pic.length);
+                    String fileName = getFileName(selectedImageUri);
+                    String creationDate = getFileCreationDate(selectedImageUri);
+                    long fileSize = getFileSize(selectedImageUri);
+                    Log.d("MainActivity", "File Name: " + fileName);
+                    Log.d("MainActivity", "Creation Date: " + creationDate);
+                    Log.d("MainActivity", "File Size: " + fileSize + " bytes");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -208,13 +155,61 @@ public class MainActivity extends AppCompatActivity {
         return byteArrayOutputStream.toByteArray();
     }
 
-    private void outputDirectoryEntry(DirectoryEntry directoryEntry) {
-        Log.d("TAG", "Name: " + byteArrayToString(directoryEntry.getName()));
-        Log.d("TAG", "Format: " + byteArrayToString(directoryEntry.getFormat()));
-        Log.d("TAG", "Size: " + byteArrayToInt(directoryEntry.getSize()));
-        Log.d("TAG", "Date create: " + byteArrayToString(directoryEntry.getDateCreate()));
-        Log.d("TAG", "Data position: " + byteArrayToInt(directoryEntry.getDataPosition()));
-        Log.d("TAG", "Password: " + byteArrayToString(directoryEntry.getPassword()));
-        Log.d("TAG", "State: " + byteArrayToInt(directoryEntry.getState()));
+
+    private String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex != -1) {
+                        result = cursor.getString(nameIndex);
+                    }
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result != null ? result.lastIndexOf('/') : -1;
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
     }
+
+    private String getFileCreationDate(Uri uri) {
+        ContentResolver contentResolver = getContentResolver();
+        String[] projection = {MediaStore.Images.Media.DATE_TAKEN};
+        try (Cursor cursor = contentResolver.query(uri, projection, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int dateIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
+                if (dateIndex != -1) {
+                    long dateTaken = cursor.getLong(dateIndex);
+                    Date date = new Date(dateTaken);
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                    return formatter.format(date);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "Unknown date";
+    }
+
+    private long getFileSize(Uri uri) {
+        long fileSize = -1;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex != -1) {
+                        fileSize = cursor.getLong(sizeIndex);
+                    }
+                }
+            }
+        }
+        return fileSize;
+    }
+
 }
