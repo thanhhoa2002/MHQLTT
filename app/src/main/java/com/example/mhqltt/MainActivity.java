@@ -1,12 +1,5 @@
 package com.example.mhqltt;
 
-//import static com.example.mhqltt.FileManager.convertDateFormat;
-import static com.example.mhqltt.FileManager.padding;
-import static com.example.mhqltt.FileManager.stringToByteArray;
-import static com.example.mhqltt.FileManager.byteArrayToString;
-import static com.example.mhqltt.FileManager.intToByteArray;
-import static com.example.mhqltt.FileManager.byteArrayToInt;
-
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -47,28 +40,35 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private byte[] pic = null;
     private FileManager fileManager;
-
-    private Context context;
-    UriFileHelper uriFileHelper = new UriFileHelper(context);
-
-    int dataPos = 0;
+    private Header header;
+    private int emptySector = 350;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
         fileManager = new FileManager(this);
-        fileManager.createFile();
-        String filename="/.NEW";
-        DirectoryEntry directoryEntry= fileManager.createDirectoryEntry();
-        fileManager.writeDirectoryEntry(directoryEntry,filename);
+        header = null;
+
+        // create Volume
+        if (!fileManager.doesVolumeExist()) {
+            header = fileManager.createVolume();
+        }
+        else {
+            try {
+                header = fileManager.readHeader();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 requestManageExternalStoragePermission();
             }
         }
-
 
         // Button to select an image
         Button selectImageButton = findViewById(R.id.select_image_button);
@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d("SIZE", String.valueOf(pic.length));
-                Log.d("DONE", String.valueOf(dataPos));
             }
         });
     }
@@ -104,23 +103,19 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_SELECT && resultCode == Activity.RESULT_OK && data != null) {
             Uri selectedImageUri = data.getData();
-            String imagePath = uriFileHelper.getRealPathFromURI(selectedImageUri);
-            Log.d("PATH", imagePath);
-            if (imagePath != null) {
-                File imageFile = new File(imagePath);
-                try {
-                    pic = fileManager.readFileToBytes(imageFile);
-                    Log.d("PIC", "Bytes: " + pic.length);
-                    String fileName = uriFileHelper.getFileName(selectedImageUri);
-                    String creationDate = uriFileHelper.getFileCreationDate(selectedImageUri);
-                    long fileSize = uriFileHelper.getFileSize(selectedImageUri);
-                    Log.d("MainActivity", "File Name: " + fileName);
-                    Log.d("MainActivity", "Creation Date: " + creationDate);
-                    Log.d("MainActivity", "File Size: " + fileSize + " bytes");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
+            File dir = getFilesDir();
+            File file = new File(dir, fileManager.byteArrayToString(header.getType()));
+
+            try {
+                RandomAccessFile raf = new RandomAccessFile(file, "rw");
+                emptySector = fileManager.writeImageFile(selectedImageUri, raf, emptySector);
+                Log.d("SEC", String.valueOf(emptySector));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+
+
         } else if (requestCode == REQUEST_CODE_MANAGE_EXTERNAL_STORAGE) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (Environment.isExternalStorageManager()) {

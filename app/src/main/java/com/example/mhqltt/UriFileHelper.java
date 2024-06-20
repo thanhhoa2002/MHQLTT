@@ -63,7 +63,7 @@ public class UriFileHelper {
                 if (dateIndex != -1) {
                     long dateTaken = cursor.getLong(dateIndex);
                     Date date = new Date(dateTaken);
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
                     return formatter.format(date);
                 }
             }
