@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     private byte[] pic = null;
     private FileManager fileManager;
     private Header header;
-    private int emptySector = 350;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,14 +102,8 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_SELECT && resultCode == Activity.RESULT_OK && data != null) {
             Uri selectedImageUri = data.getData();
-
-            File dir = getFilesDir();
-            File file = new File(dir, fileManager.byteArrayToString(header.getType()));
-
             try {
-                RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                emptySector = fileManager.writeImageFile(selectedImageUri, raf, emptySector);
-                Log.d("SEC", String.valueOf(emptySector));
+                fileManager.writeImageFile(selectedImageUri, header);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
