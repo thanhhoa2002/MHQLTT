@@ -94,6 +94,14 @@ public class FileManager {
         return header;
     }
 
+    public void updateDateTimeModifyHeader(Header header, RandomAccessFile raf) throws IOException {
+        raf.seek(44);
+        raf.write(header.getDateModify());
+        raf.seek(51);
+        raf.write(header.getTimeModify());
+    }
+
+
     public Header readHeader() throws IOException {
         Header header = new Header();
 
@@ -179,21 +187,43 @@ public class FileManager {
         return file.exists();
     }
 
-    public int writeImageFile(Uri imageUri, RandomAccessFile raf, int emptySector) throws IOException {
-        // write data
+    public void writeImageFile(Uri imageUri, Header header) throws IOException {
         String imagePath = uriFileHelper.getRealPathFromURI(imageUri);
         File imageFile = new File(imagePath);
         byte[] cache = readFileToBytes(imageFile);
+        int cacheSectorSize = cache.length % sectorSize == 0 ? cache.length / sectorSize : cache.length / sectorSize + 1;
+        File dir = context.getFilesDir();
+        File file = new File(dir, byteArrayToString(header.getType()));
+        int dataPos = (int) (file.length() / sectorSize);
 
-        raf.seek((long)emptySector * sectorSize);
-        raf.write(cache);
+        // write data
+        FileOutputStream fos = new FileOutputStream(file, true);
+
+        byte[] temp = new byte[cacheSectorSize * sectorSize - cache.length];
+        temp = padding(temp, cacheSectorSize * sectorSize - cache.length);
+
+        fos.write(cache);
+        fos.write(temp);
+
+        fos.close();
 
         // write entry
-        DirectoryEntry entry = imageUriToEntry(imageUri, emptySector);
+        RandomAccessFile raf = new RandomAccessFile(file, "rw");
+
+        DirectoryEntry entry = imageUriToEntry(imageUri, dataPos);
+
         writeImageFileDirectoryEntry(raf, entry);
 
+        // update header time
+        byte[] date = new byte[4];
+        byte[] time = new byte[3];
 
-        return emptySector + (cache.length / sectorSize + 1);
+        getCurrentDateTimeInBytes(date, time);
+        header.setDateModify(date);
+        header.setTimeModify(time);
+        updateDateTimeModifyHeader(header, raf);
+
+        raf.close();
     }
 
     public DirectoryEntry imageUriToEntry(Uri imageUri, int dataPos) {
@@ -363,8 +393,8 @@ public class FileManager {
 
         date[0] = (byte)Integer.parseInt(dateParts[0]);
         date[1] = (byte)Integer.parseInt(dateParts[1]);
-        date[2] = yearBytes[0];
-        date[3] = yearBytes[1];
+        date[2] = yearBytes[2];
+        date[3] = yearBytes[3];
 
         return date;
     }
