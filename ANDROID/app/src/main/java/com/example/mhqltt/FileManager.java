@@ -4,6 +4,7 @@ import android.content.Context;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -20,6 +21,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -33,8 +35,8 @@ import android.provider.OpenableColumns;
 public class FileManager {
     private final Context context;
     int entrySize = 256;
-    int numberOfEntries = 320;
     int sectorSize = 8192;
+    int numberOfEntries = sectorSize * 320 / entrySize;
     private UriFileHelper uriFileHelper;
 
 
@@ -233,11 +235,13 @@ public class FileManager {
         String dateCreate = uriFileHelper.getFileCreationDate(imageUri);
         long fileSize = uriFileHelper.getFileSize(imageUri);
 
+        Log.d("SIZE", String.valueOf(fileSize));
+
         entry.setName(padding(stringToByteArray(fileName[0]), 160));
         entry.setExtendedName(padding(stringToByteArray(fileName[1]), 5));
         entry.setDateCreate(stringDateToByteArray(dateCreate));
         entry.setDataPos(intToByteArray(dataPos));
-        entry.setSize(intToByteArray((int)fileSize / 1024));
+        entry.setSize(intToByteArray((int)fileSize));
         entry.setState(stringToByteArray("0"));
         entry.setPassword(padding(stringToByteArray(""), 32));
 
@@ -269,7 +273,7 @@ public class FileManager {
     }
 
     private long findNextEmptyEntrySlot(RandomAccessFile raf) throws IOException {
-        raf.seek(sectorSize * 6);
+        raf.seek(sectorSize * 6L);
 
         byte[] buffer = new byte[entrySize];
 
@@ -282,48 +286,78 @@ public class FileManager {
         return -1;
     }
 
-    private boolean isBufferEmpty(byte[] buffer) {
-        for (byte b : buffer) {
-            if (b != 0) {
-                return false;
+    public byte[] readImageFileData(RandomAccessFile raf, int dataPos, int dataSize) throws IOException {
+        try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(raf.getFD()))) {
+            raf.seek((long) dataPos * sectorSize);
+
+            byte[] cache = new byte[dataSize];
+
+            int bytesRead = bis.read(cache, 0, dataSize);
+            if (bytesRead < dataSize) {
+                throw new IOException("Unable to read the required amount of data.");
             }
+
+            return cache;
         }
-        return true;
     }
 
+    public DirectoryEntry readFileEntry(RandomAccessFile raf, int orderOfEntry) throws IOException {
+        int totalSize = 160 + 5 + 4 + 4 + 4 + 1 + 32;
+        byte[] buffer = new byte[totalSize];
 
-    public DirectoryEntry readDirectoryEntry(String filename) {
-        File dir = context.getFilesDir();
-        File file = new File(dir, filename);
+        raf.seek( sectorSize * 6L + (long) orderOfEntry * entrySize);
+        raf.readFully(buffer);
 
-        try {
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            byte[] name = new byte[160];
-            byte[] extendedName = new byte[5];
-            byte[] dateCreate = new byte[4];
-            byte[] dataPos = new byte[4];
-            byte[] size = new byte[4];
-            byte[] state = new byte[1];
-            byte[] password = new byte[32];
-
-
-            raf.read(name, 0, 160);
-            raf.read(extendedName, 0, 5);
-            raf.read(dateCreate, 0, 4);
-            raf.read(dataPos, 0, 4);
-            raf.read(size, 0, 4);
-            raf.read(state, 0, 1);
-            raf.read(password, 0, 32);
-
-            raf.close();
-
-            return new DirectoryEntry(name, extendedName, dateCreate, dataPos, size, state, password);
-        } catch (FileNotFoundException e) {
-            Log.e("File", "File not found", e);
-        } catch (IOException e) {
-            Log.e("File", "Error reading file", e);
+        if (isBufferEmpty(buffer)) {
+            return null;
         }
-        return null;
+
+        int offset = 0;
+        byte[] name = new byte[160];
+        System.arraycopy(buffer, offset, name, 0, 160);
+        offset += 160;
+
+        byte[] extendedName = new byte[5];
+        System.arraycopy(buffer, offset, extendedName, 0, 5);
+        offset += 5;
+
+        byte[] dateCreate = new byte[4];
+        System.arraycopy(buffer, offset, dateCreate, 0, 4);
+        offset += 4;
+
+        byte[] dataPos = new byte[4];
+        System.arraycopy(buffer, offset, dataPos, 0, 4);
+        offset += 4;
+
+        byte[] size = new byte[4];
+        System.arraycopy(buffer, offset, size, 0, 4);
+        offset += 4;
+
+        byte[] state = new byte[1];
+        System.arraycopy(buffer, offset, state, 0, 1);
+        offset += 1;
+
+        byte[] password = new byte[32];
+        System.arraycopy(buffer, offset, password, 0, 32);
+
+        return new DirectoryEntry(name, extendedName, dateCreate, dataPos, size, state, password);
+    }
+
+    public List<DirectoryEntry> readAllEntries(RandomAccessFile raf) throws IOException {
+        List<DirectoryEntry> entries = new ArrayList<>();
+        for (int i = 0; i < numberOfEntries; ++i) {
+            DirectoryEntry entry = readFileEntry(raf, i);
+            entries.add(entry);
+        }
+        return entries;
+    }
+
+    public void tempDeleteFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry) throws IOException {
+        raf.seek(sectorSize * 6L + (long) orderOfEntry * entrySize + 177);
+        raf.write(stringToByteArray("1"));
+
+        DirectoryEntry entry = readFileEntry(raf, orderOfEntry);
+        entries.set(orderOfEntry, entry);
     }
 
     public static byte[] padding(byte[] data, int size) {
@@ -355,6 +389,15 @@ public class FileManager {
     public static int byteArrayToInt(byte[] bytes) {
         ByteBuffer wrapped = ByteBuffer.wrap(bytes);
         return wrapped.getInt();
+    }
+
+    private boolean isBufferEmpty(byte[] buffer) {
+        for (byte b : buffer) {
+            if (b != 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public byte[] readFileToBytes(File file) throws IOException {
