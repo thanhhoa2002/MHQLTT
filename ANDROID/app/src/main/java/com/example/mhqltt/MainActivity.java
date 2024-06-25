@@ -85,7 +85,18 @@ public class MainActivity extends AppCompatActivity {
         convertButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("SIZE", String.valueOf(pic.length));
+                File dir = getFilesDir();
+                File file = new File(dir, ".NEW");
+                RandomAccessFile raf = null;
+                try {
+                    raf = new RandomAccessFile(file, "r");
+                    byte[] pic = fileManager.readImageFileData(raf, 326, 3773713);
+                    Bitmap bmp = BitmapFactory.decodeByteArray(pic, 0, pic.length);
+                    imageView.setImageBitmap(bmp);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
             }
         });
     }
