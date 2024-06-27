@@ -32,7 +32,9 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_SELECT = 1;
@@ -89,10 +91,19 @@ public class MainActivity extends AppCompatActivity {
                 File file = new File(dir, ".NEW");
                 RandomAccessFile raf = null;
                 try {
-                    raf = new RandomAccessFile(file, "r");
+                    raf = new RandomAccessFile(file, "rw");
                     byte[] pic = fileManager.readImageFileData(raf, 326, 3773713);
                     Bitmap bmp = BitmapFactory.decodeByteArray(pic, 0, pic.length);
                     imageView.setImageBitmap(bmp);
+                    List<DirectoryEntry> entries = fileManager.readAllEntries(raf);
+                    fileManager.fullDeleteFile(raf, entries, 1);
+                    for (int i = 0; i < entries.size(); ++i) {
+                        if (entries.get(i) != null) {
+                            if (Objects.equals(fileManager.byteArrayToString(entries.get(i).getState()), "1")) {
+                                Log.d("ENTRY", entries.get(i).toString());
+                            }
+                        }
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
