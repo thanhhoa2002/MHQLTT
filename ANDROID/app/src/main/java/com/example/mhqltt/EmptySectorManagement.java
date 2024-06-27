@@ -1,32 +1,36 @@
 package com.example.mhqltt;
 
 public class EmptySectorManagement {
-    private byte[] startPos;
-    private byte[] size;
+    private int startPos;
+    private int size;
 
     public EmptySectorManagement() {
-        startPos = new byte[4];
-        size = new byte[4];
+        startPos = 0;
+        size = 0;
     }
 
-    public EmptySectorManagement(byte[] startPos, byte[] size) {
+    public EmptySectorManagement(int startPos, int size) {
         this.startPos = startPos;
         this.size = size;
     }
 
-    public byte[] getStartPos() {
+    public int getStartPos() {
         return startPos;
     }
 
-    public void setStartPos(byte[] startPos) {
+    public void setStartPos(int startPos) {
         this.startPos = startPos;
     }
 
-    public byte[] getSize() {
+    public int getSize() {
         return size;
     }
 
-    public void setSize(byte[] size) {
+    public void setSize(int size) {
         this.size = size;
+    }
+
+    public int getEnd() {
+        return startPos + size;
     }
 }

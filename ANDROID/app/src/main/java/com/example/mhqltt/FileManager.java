@@ -45,7 +45,7 @@ public class FileManager {
         uriFileHelper = new UriFileHelper(context);
     }
 
-    public static void getCurrentDateTimeInBytes(byte[] date, byte[] time) {
+    public void getCurrentDateTimeInBytes(byte[] date, byte[] time) {
         Calendar calendar = Calendar.getInstance();
 
         int day = calendar.get(Calendar.DAY_OF_MONTH);
@@ -360,7 +360,65 @@ public class FileManager {
         entries.set(orderOfEntry, entry);
     }
 
-    public static byte[] padding(byte[] data, int size) {
+    public EmptySectorManagement fullDeleteFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry) throws IOException {
+        // Initialize EmptySectorManagement
+        EmptySectorManagement esm = new EmptySectorManagement();
+
+        // Calculate base position only once
+        long basePos = sectorSize * 6L + (long) orderOfEntry * entrySize;
+
+        byte[] temp = new byte[4];
+
+        // Read start position
+        raf.seek(basePos + 169);
+        raf.readFully(temp);
+        esm.setStartPos(byteArrayToInt(temp));
+
+        // Read size
+        raf.seek(basePos + 173);
+        raf.readFully(temp);
+        esm.setSize(byteArrayToInt(temp));
+
+        // Create and write padding
+        byte[] tempStr = new byte[entrySize];
+        tempStr = padding(tempStr, entrySize);
+        raf.seek(basePos);
+        raf.write(tempStr);
+
+        // Set the directory entry to null
+        entries.set(orderOfEntry, null);
+
+        return esm;
+    }
+
+    public List<EmptySectorManagement> emptyAreaProcessing(List<EmptySectorManagement> lesm, EmptySectorManagement esm) {
+        List<EmptySectorManagement> result = new ArrayList<>();
+
+        int i = 0;
+        int newStart = esm.getStartPos();
+        int newEnd = esm.getEnd();
+
+        while (i < lesm.size() && lesm.get(i).getEnd() < newStart) {
+            result.add(lesm.get(i));
+            ++i;
+        }
+
+        while (i < lesm.size() && lesm.get(i).getStartPos() <= newEnd) {
+            newStart = Math.min(newStart, lesm.get(i).getStartPos());
+            newEnd = Math.max(newEnd, lesm.get(i).getEnd());
+            ++i;
+        }
+        result.add(new EmptySectorManagement(newStart, newEnd - newStart));
+
+        while (i < lesm.size()) {
+            result.add(lesm.get(i));
+            ++i;
+        }
+
+        return result;
+    }
+
+    public byte[] padding(byte[] data, int size) {
         int sizeData = data.length;
         byte[] dataPadding = new byte[size];
         for (int i = 0; i < size; i++) {
@@ -374,19 +432,19 @@ public class FileManager {
         return dataPadding;
     }
 
-    public static String byteArrayToString(byte[] bytes) {
+    public String byteArrayToString(byte[] bytes) {
         return new String(bytes).trim();
     }
 
-    public static byte[] stringToByteArray(String str) {
+    public byte[] stringToByteArray(String str) {
         return str.getBytes();
     }
 
-    public static byte[] intToByteArray(int value) {
+    public byte[] intToByteArray(int value) {
         return ByteBuffer.allocate(4).putInt(value).array();
     }
 
-    public static int byteArrayToInt(byte[] bytes) {
+    public int byteArrayToInt(byte[] bytes) {
         ByteBuffer wrapped = ByteBuffer.wrap(bytes);
         return wrapped.getInt();
     }
@@ -427,7 +485,7 @@ public class FileManager {
         }
     }
 
-    public static byte[] stringDateToByteArray(String dateString) {
+    public byte[] stringDateToByteArray(String dateString) {
         String[] dateParts = dateString.split("-");
         byte[] date = new byte[4];
 
