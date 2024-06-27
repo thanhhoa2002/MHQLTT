@@ -74,13 +74,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Button to select an image
         Button selectImageButton = findViewById(R.id.select_image_button);
-//        selectImageButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//                startActivityForResult(intent, REQUEST_IMAGE_SELECT);
-//            }
-//        });
+        selectImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, REQUEST_IMAGE_SELECT);
+            }
+        });
 
         // Button to display the image
         imageView = findViewById(R.id.imageView);
