@@ -54,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
         fileManager = new FileManager(this);
         header = null;
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                requestManageExternalStoragePermission();
+            }
+        }
+
         // create Volume
         if (!fileManager.doesVolumeExist()) {
             header = fileManager.createVolume();
@@ -63,12 +69,6 @@ public class MainActivity extends AppCompatActivity {
                 header = fileManager.readHeader();
             } catch (IOException e) {
                 throw new RuntimeException(e);
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                requestManageExternalStoragePermission();
             }
         }
 

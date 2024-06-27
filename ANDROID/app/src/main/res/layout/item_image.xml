@@ -1,23 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:padding="1dp">
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="120dp"
         android:scaleType="centerCrop"
         android:background="@drawable/image_selector"/>
 
     <ImageView
         android:id="@+id/tickView"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:padding="8dp"
+        android:padding="4dp"
         android:visibility="gone"
         android:src="@drawable/ic_tick"/>
 </RelativeLayout>

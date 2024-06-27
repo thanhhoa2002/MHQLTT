@@ -2,7 +2,7 @@ package com.example.mhqltt;
 
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
@@ -34,22 +34,17 @@ public class ActivityImageInFile extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         showImageButton = findViewById(R.id.showImageButton);
         fileManager = new FileManager(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 3)); // Set GridLayoutManager with 3 columns
         File dir = getFilesDir();
         File file = new File(dir, ".NEW");
         RandomAccessFile raf = null;
         try {
             raf = new RandomAccessFile(file, "r");
-//                    byte[] pic = fileManager.readImageFileData(raf, 326, 3773713);
-//                    Bitmap bmp = BitmapFactory.decodeByteArray(pic, 0, pic.length);
-//                    imageView.setImageBitmap(bmp);
             List<DirectoryEntry> directoryEntries = fileManager.readAllEntries(raf);
             Log.d("TAG", "2");
             imageList = new ArrayList<>();
             for (int i = 0; i < directoryEntries.size(); i++) {
                 if (directoryEntries.get(i) != null) {
-//                            Log.d("TAG", "onClick: "+ fileManager.byteArrayToInt(directoryEntries.get(i).getDataPos()));
-//                            Log.d("TAG", "onClick: "+ fileManager.byteArrayToInt(directoryEntries.get(i).getSize()));
                     int pos = fileManager.byteArrayToInt(directoryEntries.get(i).getDataPos());
                     int size = fileManager.byteArrayToInt(directoryEntries.get(i).getSize());
                     byte[] data = fileManager.readImageFileData(raf, pos, size);
@@ -57,11 +52,9 @@ public class ActivityImageInFile extends AppCompatActivity {
                     imageList.add(bmp);
                 }
             }
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
 
         imageAdapter = new ImageAdapter(this, imageList);
         recyclerView.setAdapter(imageAdapter);
