@@ -31,10 +31,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_SELECT = 1;
@@ -44,12 +44,13 @@ public class MainActivity extends AppCompatActivity {
     private FileManager fileManager;
     private Header header;
 
+    private List<Bitmap> imageList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-
         fileManager = new FileManager(this);
         header = null;
 
@@ -87,27 +88,9 @@ public class MainActivity extends AppCompatActivity {
         convertButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File dir = getFilesDir();
-                File file = new File(dir, ".NEW");
-                RandomAccessFile raf = null;
-                try {
-                    raf = new RandomAccessFile(file, "rw");
-                    byte[] pic = fileManager.readImageFileData(raf, 326, 3773713);
-                    Bitmap bmp = BitmapFactory.decodeByteArray(pic, 0, pic.length);
-                    imageView.setImageBitmap(bmp);
-                    List<DirectoryEntry> entries = fileManager.readAllEntries(raf);
-                    fileManager.fullDeleteFile(raf, entries, 1);
-                    for (int i = 0; i < entries.size(); ++i) {
-                        if (entries.get(i) != null) {
-                            if (Objects.equals(fileManager.byteArrayToString(entries.get(i).getState()), "1")) {
-                                Log.d("ENTRY", entries.get(i).toString());
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
+                Log.d("TAG", "onClick: ");
+                Intent intent=new Intent(MainActivity.this,ActivityImageInFile.class);
+                startActivity(intent);
             }
         });
     }
