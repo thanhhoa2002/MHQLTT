@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Button to select an image
-        Button selectImageButton = findViewById(R.id.select_image_button);
+        Button selectImageButton = findViewById(R.id.add_image);
         selectImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -83,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Button to display the image
-        imageView = findViewById(R.id.imageView);
-        Button convertButton = findViewById(R.id.convert_button);
+//        imageView = findViewById(R.id.imageView);
+        Button convertButton = findViewById(R.id.display_image);
         convertButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
