@@ -5,14 +5,18 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.LruCache;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.app.AlertDialog;
+import android.widget.ImageView;
 
 import java.io.File;
 import java.io.IOException;
@@ -155,5 +159,29 @@ public class ActivityImageInFile extends AppCompatActivity {
             displayedImages.addAll(bitmaps);
             imageAdapter.notifyDataSetChanged();
         }
+    }
+
+    private void showImageDialog(Context context, Bitmap bitmap) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_image, null);
+
+        ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
+        Button button = dialogView.findViewById(R.id.dialog_button);
+
+        imageView.setImageBitmap(bitmap);
+
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        button.setOnClickListener(v -> {
+
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 }
