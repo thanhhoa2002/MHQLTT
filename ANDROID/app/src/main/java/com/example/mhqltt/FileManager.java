@@ -352,6 +352,16 @@ public class FileManager {
         return entries;
     }
 
+    public int countFileInList(List<DirectoryEntry> entries){
+        int count = 0;
+        for (DirectoryEntry entry : entries) {
+            if (entry != null) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
     public void tempDeleteFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry) throws IOException {
         raf.seek(sectorSize * 6L + (long) orderOfEntry * entrySize + 177);
         raf.write(stringToByteArray("1"));
