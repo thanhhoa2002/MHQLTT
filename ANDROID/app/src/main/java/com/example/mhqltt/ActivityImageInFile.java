@@ -17,8 +17,10 @@ import android.view.View;
 import android.widget.Button;
 import android.app.AlertDialog;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -37,7 +39,6 @@ public class ActivityImageInFile extends AppCompatActivity {
     private static final int IMAGES_PER_PAGE = 15;
     private List<DirectoryEntry> directoryEntries = null;
     private LruCache<String, Bitmap> bitmapCache;
-
     private List<EmptySectorManagement> lesm;
 
     @Override
@@ -56,9 +57,6 @@ public class ActivityImageInFile extends AppCompatActivity {
         displayedImages = new ArrayList<>();
         displayedEntries = new ArrayList<>();
 
-        lesm = new ArrayList<>();
-
-
         imageAdapter = new ImageAdapter(this, displayedImages, displayedEntries);
         recyclerView.setAdapter(imageAdapter);
 
@@ -70,6 +68,7 @@ public class ActivityImageInFile extends AppCompatActivity {
         File file = new File(dir, ".NEW");
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             directoryEntries = fileManager.readAllEntries(raf);
+            lesm = fileManager.readEmptyArea(raf);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -111,6 +110,19 @@ public class ActivityImageInFile extends AppCompatActivity {
         });
 
         loadCurrentPageImages();
+    }
+
+    @Override
+    public void onBackPressed() {
+        File dir = getFilesDir();
+        File file = new File(dir, ".NEW");
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            fileManager.writeEmptyArea(raf, lesm);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        super.onBackPressed();
     }
 
     private void loadCurrentPageImages() {
@@ -216,7 +228,8 @@ public class ActivityImageInFile extends AppCompatActivity {
 
             fullDeleteButton.setOnClickListener(v -> {
                 try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                    fileManager.fullDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
+                    EmptySectorManagement esm = fileManager.fullDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
+                    lesm = fileManager.emptyAreaProcessing(lesm, esm);
                     dialog.dismiss();
                     loadCurrentPageImages(); // Refresh the current page to reflect changes
                 } catch (IOException e) {
