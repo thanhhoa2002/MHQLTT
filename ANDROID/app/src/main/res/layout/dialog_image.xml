@@ -20,14 +20,14 @@
         android:padding="16dp">
 
         <Button
-            android:id="@+id/dialog_button"
+            android:id="@+id/temp_delete_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:text="Xóa tạm thời" />
 
         <Button
-            android:id="@+id/dialog_button2"
+            android:id="@+id/full_delete_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Xóa vĩnh viễn" />

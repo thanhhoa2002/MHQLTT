@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ActivityImageInFile extends AppCompatActivity {
@@ -29,12 +30,15 @@ public class ActivityImageInFile extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ImageAdapter imageAdapter;
     private List<Bitmap> displayedImages;
-    private Bitmap selectedImage;
+    private List<DirectoryEntry> displayedEntries;
+    private DirectoryEntry selectedEntry;
     private Button showImageButton, previousButton, nextButton;
     private int currentPage = 0;
     private static final int IMAGES_PER_PAGE = 15;
     private List<DirectoryEntry> directoryEntries = null;
     private LruCache<String, Bitmap> bitmapCache;
+
+    private List<EmptySectorManagement> lesm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +54,12 @@ public class ActivityImageInFile extends AppCompatActivity {
         recyclerView.setLayoutManager(new GridLayoutManager(this, 3)); // Set GridLayoutManager with 3 columns
 
         displayedImages = new ArrayList<>();
+        displayedEntries = new ArrayList<>();
 
-        imageAdapter = new ImageAdapter(this, displayedImages);
+        lesm = new ArrayList<>();
+
+
+        imageAdapter = new ImageAdapter(this, displayedImages, displayedEntries);
         recyclerView.setAdapter(imageAdapter);
 
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
@@ -68,17 +76,16 @@ public class ActivityImageInFile extends AppCompatActivity {
 
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(Bitmap image) {
-                selectedImage = image;
+            public void onItemClick(Bitmap image, DirectoryEntry entry) {
+                selectedEntry = entry;
             }
         });
 
         showImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (selectedImage != null) {
-                    ImageDialog imageDialog = new ImageDialog(ActivityImageInFile.this, selectedImage);
-                    imageDialog.show();
+                if (selectedEntry != null) {
+                    showImageDialog(ActivityImageInFile.this, selectedEntry);
                 }
             }
         });
@@ -108,11 +115,14 @@ public class ActivityImageInFile extends AppCompatActivity {
 
     private void loadCurrentPageImages() {
         displayedImages.clear();
+        displayedEntries.clear();
         new LoadImagesTask().execute(currentPage);
     }
 
     @SuppressLint("StaticFieldLeak")
     private class LoadImagesTask extends AsyncTask<Integer, Void, List<Bitmap>> {
+        private List<DirectoryEntry> entriesForPage = new ArrayList<>();
+
         @Override
         protected List<Bitmap> doInBackground(Integer... params) {
             int page = params[0];
@@ -127,23 +137,26 @@ public class ActivityImageInFile extends AppCompatActivity {
 
                 for (DirectoryEntry entry : directoryEntries) {
                     if (entry != null) {
-                        if (count >= startIndex && count < endIndex) {
-                            String key = fileManager.byteArrayToString(entry.getDataPos()) + "_" + fileManager.byteArrayToString(entry.getSize());
-                            Bitmap bmp = bitmapCache.get(key);
+                        if (Arrays.equals(entry.getState(), fileManager.stringToByteArray("0"))) {
+                            if (count >= startIndex && count < endIndex) {
+                                String key = fileManager.byteArrayToString(entry.getDataPos()) + "_" + fileManager.byteArrayToString(entry.getSize());
+                                Bitmap bmp = bitmapCache.get(key);
 
-                            if (bmp == null) {
-                                int pos = fileManager.byteArrayToInt(entry.getDataPos());
-                                int size = fileManager.byteArrayToInt(entry.getSize());
-                                byte[] data = fileManager.readImageFileData(raf, pos, size);
-                                bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                                bitmapCache.put(key, bmp);
+                                if (bmp == null) {
+                                    int pos = fileManager.byteArrayToInt(entry.getDataPos());
+                                    int size = fileManager.byteArrayToInt(entry.getSize());
+                                    byte[] data = fileManager.readImageFileData(raf, pos, size);
+                                    bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                    bitmapCache.put(key, bmp);
+                                }
+
+                                images.add(bmp);
+                                entriesForPage.add(entry);
                             }
-
-                            images.add(bmp);
-                        }
-                        count++;
-                        if (count >= endIndex) {
-                            break;
+                            count++;
+                            if (count >= endIndex) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -157,31 +170,61 @@ public class ActivityImageInFile extends AppCompatActivity {
         @Override
         protected void onPostExecute(List<Bitmap> bitmaps) {
             displayedImages.addAll(bitmaps);
+            displayedEntries.addAll(entriesForPage);
             imageAdapter.notifyDataSetChanged();
         }
     }
 
-    private void showImageDialog(Context context, Bitmap bitmap) {
+    private void showImageDialog(Context context, DirectoryEntry entry) {
+        File dir = getFilesDir();
+        File file = new File(dir, ".NEW");
+        Bitmap bitmap = null;
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            int pos = fileManager.byteArrayToInt(entry.getDataPos());
+            int size = fileManager.byteArrayToInt(entry.getSize());
+            byte[] data = fileManager.readImageFileData(raf, pos, size);
+            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        if (bitmap != null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View dialogView = inflater.inflate(R.layout.dialog_image, null);
+            LayoutInflater inflater = LayoutInflater.from(context);
+            View dialogView = inflater.inflate(R.layout.dialog_image, null);
 
-        ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
-        Button button = dialogView.findViewById(R.id.dialog_button);
+            ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
+            Button tempDeleteButton = dialogView.findViewById(R.id.temp_delete_button);
+            Button fullDeleteButton = dialogView.findViewById(R.id.full_delete_button);
 
-        imageView.setImageBitmap(bitmap);
+            imageView.setImageBitmap(bitmap);
 
-        builder.setView(dialogView);
+            builder.setView(dialogView);
 
-        AlertDialog dialog = builder.create();
+            AlertDialog dialog = builder.create();
 
-        button.setOnClickListener(v -> {
+            tempDeleteButton.setOnClickListener(v -> {
+                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                    fileManager.tempDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
+                    dialog.dismiss();
+                    loadCurrentPageImages(); // Refresh the current page to reflect changes
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
 
-            dialog.dismiss();
-        });
+            fullDeleteButton.setOnClickListener(v -> {
+                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                    fileManager.fullDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
+                    dialog.dismiss();
+                    loadCurrentPageImages(); // Refresh the current page to reflect changes
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
 
-        dialog.show();
+            dialog.show();
+        }
     }
 }
