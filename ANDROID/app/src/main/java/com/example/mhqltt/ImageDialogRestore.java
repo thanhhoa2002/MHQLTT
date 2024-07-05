@@ -5,11 +5,11 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.widget.ImageView;
 
-public class ImageDialogDelete extends Dialog {
+public class ImageDialogRestore extends Dialog {
 
     private Bitmap image;
 
-    public ImageDialogDelete(Context context, Bitmap image) {
+    public ImageDialogRestore(Context context, Bitmap image) {
         super(context);
         this.image = image;
     }
@@ -17,7 +17,7 @@ public class ImageDialogDelete extends Dialog {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.dialog_delete);
+        setContentView(R.layout.dialog_restore);
 
         ImageView imageView = findViewById(R.id.dialogImageView);
         imageView.setImageBitmap(image);

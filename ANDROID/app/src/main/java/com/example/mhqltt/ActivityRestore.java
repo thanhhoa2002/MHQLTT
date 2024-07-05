@@ -1,10 +1,7 @@
 package com.example.mhqltt;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,8 +11,11 @@ import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.app.AlertDialog;
 import android.widget.ImageView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ActivityDelete extends AppCompatActivity {
+public class ActivityRestore extends AppCompatActivity {
     private FileManager fileManager;
     private RecyclerView recyclerView;
     private ImageAdapter imageAdapter;
@@ -81,7 +81,7 @@ public class ActivityDelete extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (selectedEntry != null) {
-                    showImageDialog(ActivityDelete.this, selectedEntry);
+                    showImageDialog(ActivityRestore.this, selectedEntry);
                 }
             }
         });
@@ -146,7 +146,7 @@ public class ActivityDelete extends AppCompatActivity {
 
                 for (DirectoryEntry entry : directoryEntries) {
                     if (entry != null) {
-                        if (Arrays.equals(entry.getState(), fileManager.stringToByteArray("0"))) {
+                        if (Arrays.equals(entry.getState(), fileManager.stringToByteArray("1"))) {
                             if (count >= startIndex && count < endIndex) {
                                 String key = fileManager.byteArrayToString(entry.getDataPos()) + "_" + fileManager.byteArrayToString(entry.getSize());
                                 Bitmap bmp = bitmapCache.get(key);
@@ -201,10 +201,10 @@ public class ActivityDelete extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
             LayoutInflater inflater = LayoutInflater.from(context);
-            View dialogView = inflater.inflate(R.layout.dialog_delete, null);
+            View dialogView = inflater.inflate(R.layout.dialog_restore, null);
 
             ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
-            Button tempDeleteButton = dialogView.findViewById(R.id.temp_delete_button);
+            Button restoreButton = dialogView.findViewById(R.id.restore_button);
             Button fullDeleteButton = dialogView.findViewById(R.id.full_delete_button);
 
             imageView.setImageBitmap(bitmap);
@@ -213,9 +213,9 @@ public class ActivityDelete extends AppCompatActivity {
 
             AlertDialog dialog = builder.create();
 
-            tempDeleteButton.setOnClickListener(v -> {
+            restoreButton.setOnClickListener(v -> {
                 try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                    fileManager.tempDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
+                    fileManager.restoreTempFile(raf, directoryEntries, directoryEntries.indexOf(entry));
                     dialog.dismiss();
                     loadCurrentPageImages(); // Refresh the current page to reflect changes
                 } catch (IOException e) {
