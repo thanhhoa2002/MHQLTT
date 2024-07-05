@@ -1,6 +1,7 @@
 package com.example.mhqltt;
 
 import android.content.Context;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -19,6 +20,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 import java.util.HashSet;
@@ -194,39 +197,33 @@ public class FileManager {
         String imagePath = uriFileHelper.getRealPathFromURI(imageUri);
         File imageFile = new File(imagePath);
         byte[] cache = readFileToBytes(imageFile);
-        int cacheSectorSize = cache.length % sectorSize == 0 ? cache.length / sectorSize : cache.length / sectorSize + 1;
+        int cacheSectorSize = (cache.length + sectorSize - 1) / sectorSize;
+
         File dir = context.getFilesDir();
         File file = new File(dir, byteArrayToString(header.getType()));
         int dataPos = (int) (file.length() / sectorSize);
 
-        // write data
-        FileOutputStream fos = new FileOutputStream(file, true);
+        // Write data
+        try (FileOutputStream fos = new FileOutputStream(file, true)) {
+            fos.write(cache);
 
-        byte[] temp = new byte[cacheSectorSize * sectorSize - cache.length];
-        temp = padding(temp, cacheSectorSize * sectorSize - cache.length);
+            byte[] padding = new byte[cacheSectorSize * sectorSize - cache.length];
+            fos.write(padding);
+        }
 
-        fos.write(cache);
-        fos.write(temp);
+        // Write entry and update header
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            DirectoryEntry entry = imageUriToEntry(imageUri, dataPos);
+            writeImageFileDirectoryEntry(raf, entry);
 
-        fos.close();
-
-        // write entry
-        RandomAccessFile raf = new RandomAccessFile(file, "rw");
-
-        DirectoryEntry entry = imageUriToEntry(imageUri, dataPos);
-
-        writeImageFileDirectoryEntry(raf, entry);
-
-        // update header time
-        byte[] date = new byte[4];
-        byte[] time = new byte[3];
-
-        getCurrentDateTimeInBytes(date, time);
-        header.setDateModify(date);
-        header.setTimeModify(time);
-        updateDateTimeModifyHeader(header, raf);
-
-        raf.close();
+            // Update header time
+            byte[] date = new byte[4];
+            byte[] time = new byte[3];
+            getCurrentDateTimeInBytes(date, time);
+            header.setDateModify(date);
+            header.setTimeModify(time);
+            updateDateTimeModifyHeader(header, raf);
+        }
     }
 
     public DirectoryEntry imageUriToEntry(Uri imageUri, int dataPos) {
@@ -371,6 +368,14 @@ public class FileManager {
         entries.set(orderOfEntry, entry);
     }
 
+    public void restoreTempFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry) throws IOException {
+        raf.seek(sectorSize * 6L + (long) orderOfEntry * entrySize + 177);
+        raf.write(stringToByteArray("0"));
+
+        DirectoryEntry entry = readFileEntry(raf, orderOfEntry);
+        entries.set(orderOfEntry, entry);
+    }
+
     public EmptySectorManagement fullDeleteFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry) throws IOException {
         // Initialize EmptySectorManagement
         EmptySectorManagement esm = new EmptySectorManagement();
@@ -388,7 +393,7 @@ public class FileManager {
         // Read size
         raf.seek(basePos + 173);
         raf.readFully(temp);
-        esm.setSize(byteArrayToInt(temp));
+        esm.setSize(roundUp(byteArrayToInt(temp), 8192));
 
         // Create and write padding
         byte[] tempStr = new byte[entrySize];
@@ -405,51 +410,54 @@ public class FileManager {
     public List<EmptySectorManagement> emptyAreaProcessing(List<EmptySectorManagement> lesm, EmptySectorManagement esm) {
         List<EmptySectorManagement> result = new ArrayList<>();
 
-        int i = 0;
         int newStart = esm.getStartPos();
         int newEnd = esm.getEnd();
 
-        while (i < lesm.size() && lesm.get(i).getEnd() < newStart) {
-            result.add(lesm.get(i));
-            ++i;
+        // Iterate over the list only once
+        for (int i = 0; i < lesm.size(); i++) {
+            EmptySectorManagement current = lesm.get(i);
+
+            if (current.getEnd() < newStart) {
+                result.add(current);
+            } else if (current.getStartPos() <= newEnd) {
+                newStart = Math.min(newStart, current.getStartPos());
+                newEnd = Math.max(newEnd, current.getEnd());
+            } else {
+                result.add(new EmptySectorManagement(newStart, newEnd - newStart));
+                result.addAll(lesm.subList(i, lesm.size()));
+                return result;
+            }
         }
 
-        while (i < lesm.size() && lesm.get(i).getStartPos() <= newEnd) {
-            newStart = Math.min(newStart, lesm.get(i).getStartPos());
-            newEnd = Math.max(newEnd, lesm.get(i).getEnd());
-            ++i;
-        }
         result.add(new EmptySectorManagement(newStart, newEnd - newStart));
-
-        while (i < lesm.size()) {
-            result.add(lesm.get(i));
-            ++i;
-        }
-
         return result;
     }
 
+
     public List<EmptySectorManagement> readEmptyArea(RandomAccessFile raf) throws IOException {
         List<EmptySectorManagement> lesm = new ArrayList<>();
-        byte[] temp = new byte[4];
+        byte[] temp = new byte[8];
         long limit = sectorSize * 6L;
         long currentPosition = sectorSize;
 
         raf.seek(currentPosition);
 
         while (currentPosition + 8 <= limit) {
-            EmptySectorManagement esm = new EmptySectorManagement();
+            if (raf.read(temp) != 8) {
+                break; // End of file or read error
+            }
 
-            raf.read(temp, 0, 4);
-            esm.setStartPos(byteArrayToInt(temp));
+            ByteBuffer buffer = ByteBuffer.wrap(temp);
+            int startPos = buffer.getInt();
+            int size = buffer.getInt();
 
-            raf.read(temp, 0, 4);
-            esm.setSize(byteArrayToInt(temp));
+            if (startPos == 0 && size == 0) {
+                break; // End of relevant data
+            }
 
-            lesm.add(esm);
+            lesm.add(new EmptySectorManagement(startPos, size));
 
-            currentPosition += sectorSize;
-            raf.seek(currentPosition);
+            currentPosition += 8;
         }
 
         return lesm;
@@ -552,5 +560,9 @@ public class FileManager {
         date[3] = yearBytes[3];
 
         return date;
+    }
+
+    private int roundUp(int num, int divisor) {
+        return (num + divisor - 1) / divisor;
     }
 }
