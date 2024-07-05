@@ -5,11 +5,11 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.widget.ImageView;
 
-public class ImageDialog extends Dialog {
+public class ImageDialogDelete extends Dialog {
 
     private Bitmap image;
 
-    public ImageDialog(Context context, Bitmap image) {
+    public ImageDialogDelete(Context context, Bitmap image) {
         super(context);
         this.image = image;
     }

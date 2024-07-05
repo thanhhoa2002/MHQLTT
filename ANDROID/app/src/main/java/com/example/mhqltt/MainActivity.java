@@ -1,18 +1,13 @@
 package com.example.mhqltt;
 
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -23,17 +18,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -89,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d("TAG", "onClick: ");
-                Intent intent=new Intent(MainActivity.this,ActivityImageInFile.class);
+                Intent intent=new Intent(MainActivity.this, ActivityDelete.class);
                 startActivity(intent);
             }
         });

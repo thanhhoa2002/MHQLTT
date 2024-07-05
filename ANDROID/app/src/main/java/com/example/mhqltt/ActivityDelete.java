@@ -10,24 +10,21 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.app.AlertDialog;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ActivityImageInFile extends AppCompatActivity {
+public class ActivityDelete extends AppCompatActivity {
     private FileManager fileManager;
     private RecyclerView recyclerView;
     private ImageAdapter imageAdapter;
@@ -44,7 +41,7 @@ public class ActivityImageInFile extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_in_file);
+        setContentView(R.layout.activity_delete);
 
         recyclerView = findViewById(R.id.recyclerView);
         showImageButton = findViewById(R.id.showImageButton);
@@ -84,7 +81,7 @@ public class ActivityImageInFile extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (selectedEntry != null) {
-                    showImageDialog(ActivityImageInFile.this, selectedEntry);
+                    showImageDialog(ActivityDelete.this, selectedEntry);
                 }
             }
         });

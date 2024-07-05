@@ -368,6 +368,14 @@ public class FileManager {
         entries.set(orderOfEntry, entry);
     }
 
+    public void restoreTempFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry) throws IOException {
+        raf.seek(sectorSize * 6L + (long) orderOfEntry * entrySize + 177);
+        raf.write(stringToByteArray("0"));
+
+        DirectoryEntry entry = readFileEntry(raf, orderOfEntry);
+        entries.set(orderOfEntry, entry);
+    }
+
     public EmptySectorManagement fullDeleteFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry) throws IOException {
         // Initialize EmptySectorManagement
         EmptySectorManagement esm = new EmptySectorManagement();
