@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -391,7 +392,7 @@ public class FileManager {
 
         // Create and write padding
         byte[] tempStr = new byte[entrySize];
-        tempStr = padding(tempStr, entrySize);
+        Arrays.fill(tempStr, (byte) 0);  // Assuming padding fills with zeros
         raf.seek(basePos);
         raf.write(tempStr);
 
@@ -426,6 +427,49 @@ public class FileManager {
         }
 
         return result;
+    }
+
+    public List<EmptySectorManagement> readEmptyArea(RandomAccessFile raf) throws IOException {
+        List<EmptySectorManagement> lesm = new ArrayList<>();
+        byte[] temp = new byte[4];
+        long limit = sectorSize * 6L;
+        long currentPosition = sectorSize;
+
+        raf.seek(currentPosition);
+
+        while (currentPosition + 8 <= limit) {
+            EmptySectorManagement esm = new EmptySectorManagement();
+
+            raf.read(temp, 0, 4);
+            esm.setStartPos(byteArrayToInt(temp));
+
+            raf.read(temp, 0, 4);
+            esm.setSize(byteArrayToInt(temp));
+
+            lesm.add(esm);
+
+            currentPosition += sectorSize;
+            raf.seek(currentPosition);
+        }
+
+        return lesm;
+    }
+
+    public void writeEmptyArea(RandomAccessFile raf, List<EmptySectorManagement> lesm) throws IOException {
+        raf.seek(sectorSize);
+
+        ByteBuffer buffer = ByteBuffer.allocate(lesm.size() * 8);
+        for (EmptySectorManagement esm : lesm) {
+            buffer.put(intToByteArray(esm.getStartPos()));
+            buffer.put(intToByteArray(esm.getSize()));
+        }
+
+        raf.write(buffer.array());
+
+        int remainingBytes = (int) (sectorSize * 5L - lesm.size() * 8);
+        if (remainingBytes > 0) {
+            raf.write(new byte[remainingBytes]);
+        }
     }
 
     public byte[] padding(byte[] data, int size) {
