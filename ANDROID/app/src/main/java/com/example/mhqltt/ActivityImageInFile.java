@@ -40,7 +40,6 @@ public class ActivityImageInFile extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_in_file);
-
         recyclerView = findViewById(R.id.recyclerView);
         showImageButton = findViewById(R.id.showImageButton);
         previousButton = findViewById(R.id.previousButton);
@@ -62,6 +61,7 @@ public class ActivityImageInFile extends AppCompatActivity {
         File file = new File(dir, ".NEW");
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             directoryEntries = fileManager.readAllEntries(raf);
+            fileManager.sortEntriesBasedOnDateCreate(directoryEntries);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -77,8 +77,7 @@ public class ActivityImageInFile extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (selectedImage != null) {
-                    ImageDialog imageDialog = new ImageDialog(ActivityImageInFile.this, selectedImage);
-                    imageDialog.show();
+                    showImageDialog(ActivityImageInFile.this, selectedImage);
                 }
             }
         });
@@ -170,12 +169,17 @@ public class ActivityImageInFile extends AppCompatActivity {
 
         ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
         Button button = dialogView.findViewById(R.id.dialog_button);
+        Button button2 = dialogView.findViewById(R.id.dialog_button2);
+
+      
 
         imageView.setImageBitmap(bitmap);
 
         builder.setView(dialogView);
 
         AlertDialog dialog = builder.create();
+
+
 
         button.setOnClickListener(v -> {
 
