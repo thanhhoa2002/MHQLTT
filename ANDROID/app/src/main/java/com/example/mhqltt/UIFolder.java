@@ -16,6 +16,15 @@ public class UIFolder extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_folder);
 
+        Button viewImageButton =findViewById(R.id.view_image);
+        viewImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(UIFolder.this, ActivityView.class);
+                startActivity(intent);
+            }
+        });
+
 //         Button to select an image
         Button addImageButton = findViewById(R.id.add_image);
         addImageButton.setOnClickListener(new View.OnClickListener() {

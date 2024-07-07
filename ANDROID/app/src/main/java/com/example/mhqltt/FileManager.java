@@ -565,4 +565,79 @@ public class FileManager {
     private int roundUp(int num, int divisor) {
         return (num + divisor - 1) / divisor;
     }
+
+    public void sortEntriesBasedOnDateCreate(List<DirectoryEntry> entries,int temp) {
+        boolean swapped;
+        byte[] dateCreates;
+        byte[] dateCreates1;
+
+        for (int i = 0; i < entries.size() - 1; i++) {
+            swapped = false;
+            for (int j = 0; j < entries.size() - i - 1; j++) {
+                if (entries.get(j) == null || entries.get(j + 1) == null) {
+                    continue; // Skip null entries
+                }
+
+                dateCreates = new byte[4];
+                dateCreates1 = new byte[4];
+
+                for (int k = 0; k < 4; k++) {
+                    dateCreates[k] = entries.get(j).getDateCreate()[k];
+                    dateCreates1[k] = entries.get(j + 1).getDateCreate()[k];
+                }
+
+                ByteArrayDateComparator comparator = new ByteArrayDateComparator();
+                if(temp==2)
+                {
+                    if (comparator.compare(dateCreates, dateCreates1) > 0) {
+                        // Swap DirectoryEntry objects
+                        DirectoryEntry tempEntry = entries.get(j);
+                        entries.set(j, entries.get(j + 1));
+                        entries.set(j + 1, tempEntry);
+                        swapped = true;
+                    }
+                }
+                else{
+                    if (comparator.compare(dateCreates, dateCreates1) < 0) {
+                        // Swap DirectoryEntry objects
+                        DirectoryEntry tempEntry = entries.get(j);
+                        entries.set(j, entries.get(j + 1));
+                        entries.set(j + 1, tempEntry);
+                        swapped = true;
+                    }
+                }
+            }
+
+            if (!swapped) {
+                break;
+            }
+        }
+    }
+
+    public class ByteArrayDateComparator implements Comparator<byte[]> {
+        @Override
+        public int compare(byte[] date1, byte[] date2) {
+            // Giả sử các mảng có độ dài 4
+            // day: date[0], month: date[1], year: (date[2] << 8) + date[3]
+
+            int day1 = date1[0];
+            int month1 = date1[1];
+            int year1 = (date1[2] & 0xFF) << 8 | (date1[3] & 0xFF);
+
+            int day2 = date2[0];
+            int month2 = date2[1];
+            int year2 = (date2[2] & 0xFF) << 8 | (date2[3] & 0xFF);
+
+            // So sánh năm trước
+            if (year1 != year2) {
+                return Integer.compare(year1, year2);
+            }
+            // So sánh tháng nếu năm bằng nhau
+            if (month1 != month2) {
+                return Integer.compare(month1, month2);
+            }
+            // So sánh ngày nếu tháng và năm bằng nhau
+            return Integer.compare(day1, day2);
+        }
+    }
 }

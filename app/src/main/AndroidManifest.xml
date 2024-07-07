@@ -13,18 +13,6 @@
         android:theme="@style/Theme.MHQLTT"
         tools:targetApi="31">
         <activity
-            android:name=".ActivityView"
-            android:exported="false" />
-        <activity
-            android:name=".ActivityRestore"
-            android:exported="false" />
-        <activity
-            android:name=".UIFolder"
-            android:exported="false" />
-        <activity
-            android:name=".ActivityDelete"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

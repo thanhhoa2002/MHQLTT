@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">MHQLTT</string>
+    <string-array name="spinner_items">
+        <item>Mặc định</item>
+        <item>Mới nhất</item>
+        <item>Cũ nhất</item>
+    </string-array>
 </resources>

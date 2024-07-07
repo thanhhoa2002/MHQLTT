@@ -10,8 +10,11 @@ import android.os.Bundle;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -24,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ActivityRestore extends AppCompatActivity {
+public class ActivityView extends AppCompatActivity {
     private FileManager fileManager;
     private RecyclerView recyclerView;
     private ImageAdapter imageAdapter;
@@ -38,10 +41,13 @@ public class ActivityRestore extends AppCompatActivity {
     private LruCache<String, Bitmap> bitmapCache;
     private List<EmptySectorManagement> lesm;
 
+    Spinner spinnerSort;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_fileshow);
+        setContentView(R.layout.activity_folder);
+
+        spinnerSort= (Spinner) findViewById(R.id.spinner);
 
         recyclerView = findViewById(R.id.recyclerView);
         showImageButton = findViewById(R.id.showImageButton);
@@ -61,6 +67,7 @@ public class ActivityRestore extends AppCompatActivity {
         final int cacheSize = maxMemory / 8;
         bitmapCache = new LruCache<>(cacheSize);
 
+
         File dir = getFilesDir();
         File file = new File(dir, ".NEW");
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
@@ -69,6 +76,54 @@ public class ActivityRestore extends AppCompatActivity {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(ActivityView.this, "Selected: " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
+                if (position == 0) {
+//                    File dir = getFilesDir();
+//                    File file = new File(dir, ".NEW");
+//                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+//                        directoryEntries = fileManager.readAllEntries(raf);
+//                        lesm = fileManager.readEmptyArea(raf);
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+                }
+                else if(position==1)
+                {
+                    currentPage=0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries,position);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                else if(position==2)
+                {
+                    currentPage=0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries,position);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
@@ -81,7 +136,7 @@ public class ActivityRestore extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (selectedEntry != null) {
-                    showImageDialog(ActivityRestore.this, selectedEntry);
+                    showImageDialog(ActivityView.this, selectedEntry);
                 }
             }
         });
@@ -146,7 +201,7 @@ public class ActivityRestore extends AppCompatActivity {
 
                 for (DirectoryEntry entry : directoryEntries) {
                     if (entry != null) {
-                        if (Arrays.equals(entry.getState(), fileManager.stringToByteArray("1"))) {
+                        if (Arrays.equals(entry.getState(), fileManager.stringToByteArray("0"))) {
                             if (count >= startIndex && count < endIndex) {
                                 String key = fileManager.byteArrayToString(entry.getDataPos()) + "_" + fileManager.byteArrayToString(entry.getSize());
                                 Bitmap bmp = bitmapCache.get(key);
@@ -201,38 +256,17 @@ public class ActivityRestore extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
             LayoutInflater inflater = LayoutInflater.from(context);
-            View dialogView = inflater.inflate(R.layout.dialog_restore, null);
+            View dialogView = inflater.inflate(R.layout.dialog_encrypt, null);
 
             ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
-            Button restoreButton = dialogView.findViewById(R.id.encrypt_button);
-            Button fullDeleteButton = dialogView.findViewById(R.id.full_delete_button);
 
+            Button encryptButton = dialogView.findViewById(R.id.encrypt_button);
             imageView.setImageBitmap(bitmap);
 
             builder.setView(dialogView);
 
             AlertDialog dialog = builder.create();
-
-            restoreButton.setOnClickListener(v -> {
-                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                    fileManager.restoreTempFile(raf, directoryEntries, directoryEntries.indexOf(entry));
-                    dialog.dismiss();
-                    loadCurrentPageImages(); // Refresh the current page to reflect changes
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-
-            fullDeleteButton.setOnClickListener(v -> {
-                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                    EmptySectorManagement esm = fileManager.fullDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
-                    lesm = fileManager.emptyAreaProcessing(lesm, esm);
-                    dialog.dismiss();
-                    loadCurrentPageImages(); // Refresh the current page to reflect changes
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+            //khuc nay lam encrypt
 
             dialog.show();
         }
