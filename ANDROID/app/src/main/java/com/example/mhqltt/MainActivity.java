@@ -66,35 +66,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Button to select an image
-//        Button addImageButton = findViewById(R.id.add_image);
-//        addImageButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//                startActivityForResult(intent, REQUEST_IMAGE_SELECT);
-//            }
-//        });
-//
-//        Button deleteImageButton = findViewById(R.id.delete_image);
-//        deleteImageButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Log.d("TAG", "onClick: ");
-//                Intent intent=new Intent(MainActivity.this, ActivityDelete.class);
-//                startActivity(intent);
-//            }
-//        });
-//
-//        Button restoreImageButton = findViewById(R.id.restore_image);
-//        restoreImageButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Log.d("TAG", "onClick: ");
-//                Intent intent=new Intent(MainActivity.this, ActivityRestore.class);
-//                startActivity(intent);
-//            }
-//        });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.R)
