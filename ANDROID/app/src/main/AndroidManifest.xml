@@ -16,6 +16,9 @@
             android:name=".ActivityRestore"
             android:exported="false" />
         <activity
+            android:name=".UIFolder"
+            android:exported="false" />
+        <activity
             android:name=".ActivityDelete"
             android:exported="false" />
         <activity
