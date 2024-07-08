@@ -1,6 +1,8 @@
 package com.example.mhqltt;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -8,19 +10,36 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.IOException;
+
 public class UIFolder extends AppCompatActivity {
     private static final int REQUEST_IMAGE_SELECT = 1;
-    private static final int REQUEST_CODE_MANAGE_EXTERNAL_STORAGE = 2;
+    private FileManager fileManager;
+    private Header header;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_folder);
+        fileManager = new FileManager(this);
+        header = null;
 
-        Button viewImageButton =findViewById(R.id.view_image);
+        // create Volume
+        if (!fileManager.doesVolumeExist()) {
+            header = fileManager.createVolume();
+        } else {
+            try {
+                header = fileManager.readHeader();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        Button viewImageButton = findViewById(R.id.view_image);
         viewImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent=new Intent(UIFolder.this, ActivityView.class);
+                Intent intent = new Intent(UIFolder.this, ActivityView.class);
                 startActivity(intent);
             }
         });
@@ -39,7 +58,7 @@ public class UIFolder extends AppCompatActivity {
         deleteImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent=new Intent(UIFolder.this, ActivityDelete.class);
+                Intent intent = new Intent(UIFolder.this, ActivityDelete.class);
                 startActivity(intent);
             }
         });
@@ -49,9 +68,22 @@ public class UIFolder extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Intent intent=new Intent(UIFolder.this, ActivityRestore.class);
+                Intent intent = new Intent(UIFolder.this, ActivityRestore.class);
                 startActivity(intent);
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_IMAGE_SELECT && resultCode == Activity.RESULT_OK && data != null) {
+            Uri selectedImageUri = data.getData();
+            try {
+                fileManager.writeImageFile(selectedImageUri, header);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

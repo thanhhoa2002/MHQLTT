@@ -22,38 +22,17 @@ import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int REQUEST_IMAGE_SELECT = 1;
     private static final int REQUEST_CODE_MANAGE_EXTERNAL_STORAGE = 2;
-    private ImageView imageView;
-    private byte[] pic = null;
-    private FileManager fileManager;
-    private Header header;
-
-    private List<Bitmap> imageList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        fileManager = new FileManager(this);
-        header = null;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 requestManageExternalStoragePermission();
-            }
-        }
-
-        // create Volume
-        if (!fileManager.doesVolumeExist()) {
-            header = fileManager.createVolume();
-        }
-        else {
-            try {
-                header = fileManager.readHeader();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
 
@@ -78,16 +57,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_SELECT && resultCode == Activity.RESULT_OK && data != null) {
-            Uri selectedImageUri = data.getData();
-            try {
-                fileManager.writeImageFile(selectedImageUri, header);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-
-        } else if (requestCode == REQUEST_CODE_MANAGE_EXTERNAL_STORAGE) {
+        if (requestCode == REQUEST_CODE_MANAGE_EXTERNAL_STORAGE) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 if (Environment.isExternalStorageManager()) {
                     // Quyền truy cập đã được cấp
