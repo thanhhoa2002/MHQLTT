@@ -1,114 +1,258 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/design_default_color_secondary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:background="#0E4A99"
         app:title="DATN"
-        app:titleMarginStart="25dp">
+        app:titleMarginStart="25dp"></androidx.appcompat.widget.Toolbar>
 
-    </androidx.appcompat.widget.Toolbar>
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="524dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="200dp"
+        android:layout_weight="1"
+        android:background="@color/white"
+        android:columnCount="2"
+        android:orientation="horizontal"
+        android:rowCount="2">
+
+        <!-- First ConstraintLayout -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/btn_background_1">
+
+            <Button
+                android:id="@+id/your_folder"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Fullscreen Button 1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/imageView1"
+                android:layout_width="149dp"
+                android:layout_height="92dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/folder" />
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Tập tin của bạn"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageView1" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Second ConstraintLayout -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/btn_background_1">
+
+            <Button
+                android:id="@+id/btn_fullscreen2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Fullscreen Button 2"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="149dp"
+                android:layout_height="92dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/recovery" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Phục hồi ảnh"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageView2" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Third ConstraintLayout -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/btn_background_1">
+
+            <Button
+                android:id="@+id/btn_fullscreen3"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Fullscreen Button 3"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/imageView3"
+                android:layout_width="149dp"
+                android:layout_height="92dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/hidden" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Ẩn dữ liệu"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageView3" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Fourth ConstraintLayout -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/btn_background_1">
+
+            <Button
+                android:id="@+id/btn_fullscreen4"
+                android:layout_width="150dp"
+                android:layout_height="296dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Fullscreen Button 4"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/imageView4"
+                android:layout_width="149dp"
+                android:layout_height="92dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/guide" />
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Hướng dẫn sử dụng"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageView4" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </GridLayout>
+
+</LinearLayout>
 
 
-    <Button
-        android:id="@+id/delete_image"
-        android:layout_width="244dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="144dp"
-        android:backgroundTint="@color/design_default_color_secondary_variant"
-        android:text="Xóa ảnh"
-        android:textSize="18dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/add_image"
-        app:layout_constraintWidth_percent="0.9" />
+    <!--    <Button-->
+    <!--        android:id="@+id/main_button_2"-->
+    <!--        android:layout_width="244dp"-->
+    <!--        android:layout_height="70dp"-->
+    <!--        android:layout_marginTop="60dp"-->
+    <!--        android:backgroundTint="@color/design_default_color_secondary_variant"-->
+    <!--        android:text="Xóa ảnh"-->
+    <!--        android:textSize="18dp"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.497"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/main_button_1"-->
+    <!--        app:layout_constraintWidth_percent="0.9" />-->
 
-    <Button
-        android:id="@+id/add_image"
-        android:layout_width="244dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="152dp"
-        android:backgroundTint="@color/design_default_color_secondary_variant"
-        android:text="Thêm ảnh"
-        android:textSize="18dp"
-        android:drawablePadding="1dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.9" />
-
-
-
-    <Button
-        android:id="@+id/restore_image"
-        android:layout_width="244dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="148dp"
-        android:backgroundTint="@color/design_default_color_secondary_variant"
-        android:text="Phục hồi ảnh"
-        android:textSize="18dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.487"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/delete_image"
-        app:layout_constraintWidth_percent="0.9" />
+    <!--    <Button-->
+    <!--        android:id="@+id/main_button_1"-->
+    <!--        android:layout_width="244dp"-->
+    <!--        android:layout_height="70dp"-->
+    <!--        android:layout_marginTop="152dp"-->
+    <!--        android:backgroundTint="@color/design_default_color_secondary_variant"-->
+    <!--        android:drawablePadding="1dp"-->
+    <!--        android:text="Tập tin của bạn"-->
+    <!--        android:textSize="18dp"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.497"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent"-->
+    <!--        app:layout_constraintWidth_percent="0.9" />-->
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--<?xml version="1.0" encoding="utf-8"?>-->
-<!--<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    xmlns:tools="http://schemas.android.com/tools"-->
-<!--    android:id="@+id/main"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent"-->
-<!--    tools:context=".MainActivity">-->
-
-<!--    <ImageView-->
-<!--        android:id="@+id/imageView"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:srcCompat="@drawable/ic_launcher_foreground" />-->
-
-<!--    <Button-->
-<!--        android:id="@+id/select_image_button"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="684dp"-->
-<!--        android:text="Add"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.198"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
-
-<!--    <Button-->
-<!--        android:id="@+id/convert_button"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="684dp"-->
-<!--        android:text="Show"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.804"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
-
-<!--</androidx.constraintlayout.widget.ConstraintLayout>-->
+    <!--    <Button-->
+    <!--        android:id="@+id/main_button_3"-->
+    <!--        android:layout_width="244dp"-->
+    <!--        android:layout_height="70dp"-->
+    <!--        android:backgroundTint="@color/design_default_color_secondary_variant"-->
+    <!--        android:text="Phục hồi ảnh"-->
+    <!--        android:textSize="18dp"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.497"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent"-->
+    <!--        app:layout_constraintVertical_bias="0.524"-->
+    <!--        app:layout_constraintWidth_percent="0.9" />-->
 
 
+    <!--</androidx.constraintlayout.widget.ConstraintLayout>-->
