@@ -18,7 +18,9 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,6 +43,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(MainActivity.this, UIFolder.class);
+                startActivity(intent);
+            }
+        });
+
+        Button recovery=findViewById(R.id.btn_recovery);
+       recovery.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this, ActivityRecovery.class);
                 startActivity(intent);
             }
         });
@@ -69,4 +80,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }
