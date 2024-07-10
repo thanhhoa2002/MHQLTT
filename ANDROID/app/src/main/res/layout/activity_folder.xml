@@ -7,7 +7,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:background="#0E4A99"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme">
 
@@ -21,11 +21,11 @@
                 android:id="@+id/spinner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="end|center_vertical"
+                android:entries="@array/spinner_items"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
-                android:padding="8dp"
-                android:layout_gravity="end|center_vertical"
-                android:entries="@array/spinner_items" />
+                android:padding="8dp" />
         </FrameLayout>
     </androidx.appcompat.widget.Toolbar>
 
@@ -50,20 +50,23 @@
             android:id="@+id/previousButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Previous"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="16dp"
+            android:backgroundTint="#5A9AEF"
+            android:text="Previous" />
 
         <Button
             android:id="@+id/showImageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Show Image"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="16dp"
+            android:backgroundTint="#5A9AEF"
+            android:text="Show Image" />
 
         <Button
             android:id="@+id/nextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Next"/>
+            android:backgroundTint="#5A9AEF"
+            android:text="Next" />
     </LinearLayout>
 </RelativeLayout>

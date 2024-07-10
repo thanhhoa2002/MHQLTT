@@ -69,28 +69,29 @@ public class ActivityView extends AppCompatActivity {
         bitmapCache = new LruCache<>(cacheSize);
 
 
-        File dir = getFilesDir();
-        File file = new File(dir, ".NEW");
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            directoryEntries = fileManager.readAllEntries(raf);
-            lesm = fileManager.readEmptyArea(raf);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        File dir = getFilesDir();
+//        File file = new File(dir, ".NEW");
+//        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+//            directoryEntries = fileManager.readAllEntries(raf);
+//            lesm = fileManager.readEmptyArea(raf);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
         spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(ActivityView.this, "Selected: " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
                 if (position == 0) {
-//                    File dir = getFilesDir();
-//                    File file = new File(dir, ".NEW");
-//                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-//                        directoryEntries = fileManager.readAllEntries(raf);
-//                        lesm = fileManager.readEmptyArea(raf);
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    }
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    loadCurrentPageImages();
                 }
                 else if(position==1)
                 {
@@ -104,6 +105,7 @@ public class ActivityView extends AppCompatActivity {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
+                    loadCurrentPageImages();
                 }
                 else if(position==2)
                 {
@@ -117,6 +119,7 @@ public class ActivityView extends AppCompatActivity {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
+                    loadCurrentPageImages();
                 }
             }
 
@@ -162,7 +165,7 @@ public class ActivityView extends AppCompatActivity {
             }
         });
 
-        loadCurrentPageImages();
+//        loadCurrentPageImages();
     }
 
     @Override

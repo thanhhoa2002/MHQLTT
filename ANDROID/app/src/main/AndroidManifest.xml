@@ -13,6 +13,9 @@
         android:theme="@style/Theme.MHQLTT"
         tools:targetApi="31">
         <activity
+            android:name=".ActivityRecovery"
+            android:exported="false" />
+        <activity
             android:name=".ActivityView"
             android:exported="false" />
         <activity

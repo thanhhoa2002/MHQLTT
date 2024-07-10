@@ -82,7 +82,7 @@
             android:background="@drawable/btn_background_1">
 
             <Button
-                android:id="@+id/btn_fullscreen2"
+                android:id="@+id/btn_recovery"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:background="@android:color/transparent"
