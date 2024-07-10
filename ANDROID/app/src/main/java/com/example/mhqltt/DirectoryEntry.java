@@ -8,6 +8,7 @@ public class DirectoryEntry {
     private byte[] size;
     private byte[] state;
     private byte[] password;
+    private byte[] encrypt;
 
     public DirectoryEntry() {
         name = new byte[160];
@@ -17,9 +18,10 @@ public class DirectoryEntry {
         size = new byte[4];
         state = new byte[1];
         password = new byte[32];
+        encrypt = new byte[1];
     }
 
-    public DirectoryEntry(byte[] name, byte[] extendedName, byte[] dateCreate, byte[] dataPos, byte[] size, byte[] state, byte[] password) {
+    public DirectoryEntry(byte[] name, byte[] extendedName, byte[] dateCreate, byte[] dataPos, byte[] size, byte[] state, byte[] password, byte[] encrypt) {
         this.name = name;
         this.extendedName = extendedName;
         this.dateCreate = dateCreate;
@@ -27,6 +29,7 @@ public class DirectoryEntry {
         this.size = size;
         this.state = state;
         this.password = password;
+        this.encrypt = encrypt;
     }
 
     public byte[] getName() {
@@ -83,5 +86,13 @@ public class DirectoryEntry {
 
     public void setPassword(byte[] password) {
         this.password = password;
+    }
+
+    public byte[] getEncrypt() {
+        return encrypt;
+    }
+
+    public void setEncrypt(byte[] encrypt) {
+        this.encrypt = encrypt;
     }
 }

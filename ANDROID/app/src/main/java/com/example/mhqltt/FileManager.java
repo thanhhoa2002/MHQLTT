@@ -242,6 +242,7 @@ public class FileManager {
         entry.setSize(intToByteArray((int)fileSize));
         entry.setState(stringToByteArray("0"));
         entry.setPassword(padding(stringToByteArray(""), 32));
+        entry.setEncrypt(stringToByteArray("0"));
 
         return entry;
     }
@@ -263,6 +264,7 @@ public class FileManager {
             raf.write(directoryEntry.getSize());
             raf.write(directoryEntry.getState());
             raf.write(directoryEntry.getPassword());
+            raf.write(directoryEntry.getEncrypt());
 
             Log.d("File", "Write entry table successfully");
         } catch (IOException e) {
@@ -289,7 +291,6 @@ public class FileManager {
             raf.seek((long) dataPos * sectorSize);
 
             byte[] cache = new byte[dataSize];
-
             int bytesRead = bis.read(cache, 0, dataSize);
             if (bytesRead < dataSize) {
                 throw new IOException("Unable to read the required amount of data.");
@@ -300,7 +301,7 @@ public class FileManager {
     }
 
     public DirectoryEntry readFileEntry(RandomAccessFile raf, int orderOfEntry) throws IOException {
-        int totalSize = 160 + 5 + 4 + 4 + 4 + 1 + 32;
+        int totalSize = 160 + 5 + 4 + 4 + 4 + 1 + 32 + 1;
         byte[] buffer = new byte[totalSize];
 
         raf.seek( sectorSize * 6L + (long) orderOfEntry * entrySize);
@@ -337,8 +338,12 @@ public class FileManager {
 
         byte[] password = new byte[32];
         System.arraycopy(buffer, offset, password, 0, 32);
+        offset += 32;
 
-        return new DirectoryEntry(name, extendedName, dateCreate, dataPos, size, state, password);
+        byte[] encrypt = new byte[1];
+        System.arraycopy(buffer, offset, encrypt, 0, 1);
+
+        return new DirectoryEntry(name, extendedName, dateCreate, dataPos, size, state, password, encrypt);
     }
 
     public List<DirectoryEntry> readAllEntries(RandomAccessFile raf) throws IOException {
@@ -478,6 +483,99 @@ public class FileManager {
         if (remainingBytes > 0) {
             raf.write(new byte[remainingBytes]);
         }
+    }
+
+    public void encryptFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry, String password) throws IOException {
+        long basePos = sectorSize * 6L + (long) orderOfEntry * entrySize;
+
+        byte[] temp = new byte[4];
+
+        // Read start position
+        raf.seek(basePos + 169);
+        raf.readFully(temp);
+        long startPos = byteArrayToInt(temp);
+
+        // Read size
+        raf.seek(basePos + 173);
+        raf.readFully(temp);
+        int size = roundUp(byteArrayToInt(temp), 8192);
+
+//        byte[] cache = readImageFileData(raf, (int) startPos, size * sectorSize);
+//        byte[] encryptedBytes;
+//        try {
+//            encryptedBytes = AES.encrypt(cache, password);
+//            byte[] decryptedBytes = AES.decrypt(encryptedBytes, password);
+//            Log.d("AES", "enc" + encryptedBytes.length);
+//            Log.d("AES", "dec" + decryptedBytes.length);
+//            Log.d("AES", "goc" + cache.length);
+//            Log.d("AES", "size" + size);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+
+        byte[] buffer = new byte[sectorSize];
+        byte[] encryptedChunk;
+        for (long pos = startPos * sectorSize; pos < (startPos + size) * sectorSize; pos += sectorSize) {
+            raf.seek(pos);
+            int bytesRead = raf.read(buffer, 0, sectorSize);
+            if (bytesRead > 0) {
+                try {
+                    Log.d("AES", "buf"+buffer.length);
+                    encryptedChunk = AES.encrypt(Arrays.copyOf(buffer, bytesRead), password);
+                    raf.seek(pos);
+                    raf.write(encryptedChunk, 0, encryptedChunk.length);
+                    Log.d("AES", "en"+encryptedChunk.length);
+                } catch (Exception e) {
+                    throw new IOException("Error encrypting chunk", e);
+                }
+            }
+        }
+
+        raf.seek(basePos + 210);
+        raf.write(stringToByteArray("1"));
+
+        DirectoryEntry entry = readFileEntry(raf, orderOfEntry);
+        entries.set(orderOfEntry, entry);
+    }
+
+    public void decryptFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry, String password) throws IOException {
+        long basePos = sectorSize * 6L + (long) orderOfEntry * entrySize;
+
+        byte[] temp = new byte[4];
+
+        // Read start position
+        raf.seek(basePos + 169);
+        raf.readFully(temp);
+        long startPos = byteArrayToInt(temp);
+
+        // Read size
+        raf.seek(basePos + 173);
+        raf.readFully(temp);
+        int size = roundUp(byteArrayToInt(temp), 8192);
+
+
+        byte[] buffer = new byte[sectorSize];
+        byte[] decryptedChunk;
+        for (long pos = startPos * sectorSize; pos < (startPos + size) * sectorSize; pos += sectorSize) {
+            raf.seek(pos);
+            int bytesRead = raf.read(buffer, 0, sectorSize);
+            if (bytesRead > 0) {
+                try {
+                    decryptedChunk = AES.decrypt(Arrays.copyOf(buffer, bytesRead), password);
+                    raf.seek(pos);
+                    raf.write(decryptedChunk, 0, decryptedChunk.length);
+                    Log.d("AES", "de"+decryptedChunk.length);
+                } catch (Exception e) {
+                    throw new IOException("Error encrypting chunk", e);
+                }
+            }
+        }
+
+        raf.seek(basePos + 210);
+        raf.write(stringToByteArray("0"));
+
+        DirectoryEntry entry = readFileEntry(raf, orderOfEntry);
+        entries.set(orderOfEntry, entry);
     }
 
     public byte[] padding(byte[] data, int size) {

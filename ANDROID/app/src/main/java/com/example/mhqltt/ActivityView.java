@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -209,9 +210,14 @@ public class ActivityView extends AppCompatActivity {
                                 if (bmp == null) {
                                     int pos = fileManager.byteArrayToInt(entry.getDataPos());
                                     int size = fileManager.byteArrayToInt(entry.getSize());
-                                    byte[] data = fileManager.readImageFileData(raf, pos, size);
-                                    bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                                    bitmapCache.put(key, bmp);
+                                    if (Arrays.equals(entry.getEncrypt(), fileManager.stringToByteArray("0"))) {
+                                        byte[] data = fileManager.readImageFileData(raf, pos, size);
+                                        bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                        bitmapCache.put(key, bmp);
+                                    } else {
+                                        bmp = BitmapFactory.decodeResource(ActivityView.this.getResources(), R.drawable.encrypt);
+                                        bitmapCache.put(key, bmp);
+                                    }
                                 }
 
                                 images.add(bmp);
@@ -240,35 +246,75 @@ public class ActivityView extends AppCompatActivity {
     }
 
     private void showImageDialog(Context context, DirectoryEntry entry) {
-        File dir = getFilesDir();
-        File file = new File(dir, ".NEW");
-        Bitmap bitmap = null;
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            int pos = fileManager.byteArrayToInt(entry.getDataPos());
-            int size = fileManager.byteArrayToInt(entry.getSize());
-            byte[] data = fileManager.readImageFileData(raf, pos, size);
-            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (Arrays.equals(entry.getEncrypt(), fileManager.stringToByteArray("0"))) {
+            File dir = getFilesDir();
+            File file = new File(dir, ".NEW");
+            Bitmap bitmap = null;
+            try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                int pos = fileManager.byteArrayToInt(entry.getDataPos());
+                int size = fileManager.byteArrayToInt(entry.getSize());
+                byte[] data = fileManager.readImageFileData(raf, pos, size);
+                bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (bitmap != null) {
+                showBitmapDialog(context, bitmap, entry);
+            }
+        } else {
+            // Hiển thị hình ảnh từ tài nguyên nếu ảnh đã bị mã hóa
+            showImageDialogWithResource(context, R.drawable.encrypt, entry);
+        }
+    }
+
+    private void showImageDialogWithResource(Context context, int resourceId, DirectoryEntry entry) {
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId);
+        showBitmapDialog(context, bitmap, entry);
+    }
+
+    private void showBitmapDialog(Context context, Bitmap bitmap, DirectoryEntry entry) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_encrypt, null);
+
+        ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
+        Button encryptButton = dialogView.findViewById(R.id.encrypt_button);
+        Button decryptButton = dialogView.findViewById(R.id.decrypt_button);
+
+        imageView.setImageBitmap(bitmap);
+
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        if (Arrays.equals(entry.getEncrypt(), fileManager.stringToByteArray("0"))) {
+            decryptButton.setVisibility(View.GONE);
+            encryptButton.setOnClickListener(v -> {
+                File file = new File(getFilesDir(), ".NEW");
+                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                    fileManager.encryptFile(raf, directoryEntries, directoryEntries.indexOf(entry), "1234567890123456");
+                    dialog.dismiss();
+                    loadCurrentPageImages();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            encryptButton.setVisibility(View.GONE);
+            decryptButton.setOnClickListener(v -> {
+                File file = new File(getFilesDir(), ".NEW");
+                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                    fileManager.decryptFile(raf, directoryEntries, directoryEntries.indexOf(entry), "1234567890123456");
+                    dialog.dismiss();
+                    loadCurrentPageImages();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
 
-        if (bitmap != null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-
-            LayoutInflater inflater = LayoutInflater.from(context);
-            View dialogView = inflater.inflate(R.layout.dialog_encrypt, null);
-
-            ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
-
-            Button encryptButton = dialogView.findViewById(R.id.encrypt_button);
-            imageView.setImageBitmap(bitmap);
-
-            builder.setView(dialogView);
-
-            AlertDialog dialog = builder.create();
-            //khuc nay lam encrypt
-
-            dialog.show();
-        }
+        dialog.show();
     }
 }
