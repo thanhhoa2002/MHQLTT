@@ -147,24 +147,26 @@ public class ActivityDelete extends AppCompatActivity {
                 for (DirectoryEntry entry : directoryEntries) {
                     if (entry != null) {
                         if (Arrays.equals(entry.getState(), fileManager.stringToByteArray("0"))) {
-                            if (count >= startIndex && count < endIndex) {
-                                String key = fileManager.byteArrayToString(entry.getDataPos()) + "_" + fileManager.byteArrayToString(entry.getSize());
-                                Bitmap bmp = bitmapCache.get(key);
+                            if (Arrays.equals(entry.getEncrypt(), fileManager.stringToByteArray("0"))) {
+                                if (count >= startIndex && count < endIndex) {
+                                    String key = fileManager.byteArrayToString(entry.getDataPos()) + "_" + fileManager.byteArrayToString(entry.getSize());
+                                    Bitmap bmp = bitmapCache.get(key);
 
-                                if (bmp == null) {
-                                    int pos = fileManager.byteArrayToInt(entry.getDataPos());
-                                    int size = fileManager.byteArrayToInt(entry.getSize());
-                                    byte[] data = fileManager.readImageFileData(raf, pos, size);
-                                    bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                                    bitmapCache.put(key, bmp);
+                                    if (bmp == null) {
+                                        int pos = fileManager.byteArrayToInt(entry.getDataPos());
+                                        int size = fileManager.byteArrayToInt(entry.getSize());
+                                        byte[] data = fileManager.readImageFileData(raf, pos, size);
+                                        bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                        bitmapCache.put(key, bmp);
+                                    }
+
+                                    images.add(bmp);
+                                    entriesForPage.add(entry);
                                 }
-
-                                images.add(bmp);
-                                entriesForPage.add(entry);
-                            }
-                            count++;
-                            if (count >= endIndex) {
-                                break;
+                                count++;
+                                if (count >= endIndex) {
+                                    break;
+                                }
                             }
                         }
                     }

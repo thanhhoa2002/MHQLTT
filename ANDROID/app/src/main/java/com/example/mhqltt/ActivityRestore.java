@@ -204,7 +204,7 @@ public class ActivityRestore extends AppCompatActivity {
             View dialogView = inflater.inflate(R.layout.dialog_restore, null);
 
             ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
-            Button restoreButton = dialogView.findViewById(R.id.encrypt_button);
+            Button restoreButton = dialogView.findViewById(R.id.restore_button);
             Button fullDeleteButton = dialogView.findViewById(R.id.full_delete_button);
 
             imageView.setImageBitmap(bitmap);

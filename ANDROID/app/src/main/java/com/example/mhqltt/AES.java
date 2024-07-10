@@ -8,14 +8,14 @@ import java.security.NoSuchAlgorithmException;
 public class AES {
     public static byte[] encrypt(byte[] data, String password) throws Exception {
         SecretKeySpec keySpec = getKey(password);
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, keySpec);
         return cipher.doFinal(data);
     }
 
     public static byte[] decrypt(byte[] encryptedData, String password) throws Exception {
         SecretKeySpec keySpec = getKey(password);
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
         cipher.init(Cipher.DECRYPT_MODE, keySpec);
         return cipher.doFinal(encryptedData);
     }

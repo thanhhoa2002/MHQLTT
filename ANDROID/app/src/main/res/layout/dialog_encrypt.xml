@@ -31,9 +31,15 @@
             android:id="@+id/encrypt_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:text="Mã hóa" />
+            android:gravity="center"
+            android:text="Mã hóa"/>
 
+        <Button
+            android:id="@+id/decrypt_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Giải mã"/>
 
 
     </LinearLayout>
