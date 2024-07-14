@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textViewTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Thông tin ảnh"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="10dp" />
+
+    <TextView
+        android:id="@+id/textViewName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tên: " />
+
+    <TextView
+        android:id="@+id/textViewExtension"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Phần mở rộng: " />
+
+    <TextView
+        android:id="@+id/textViewCreationDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ngày tạo: " />
+
+</LinearLayout>

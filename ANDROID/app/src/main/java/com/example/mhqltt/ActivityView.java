@@ -18,6 +18,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -254,12 +255,37 @@ public class ActivityView extends AppCompatActivity {
         ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
         Button encryptButton = dialogView.findViewById(R.id.encrypt_button);
         Button decryptButton = dialogView.findViewById(R.id.decrypt_button);
+        Button infImage= dialogView.findViewById(R.id.informationImage);
 
         imageView.setImageBitmap(bitmap);
 
         builder.setView(dialogView);
 
         AlertDialog dialog = builder.create();
+        infImage.setOnClickListener(v -> {
+            // Lấy thông tin từ DirectoryEntry
+            String name = "Tên ảnh: " + fileManager.byteArrayToString(entry.getName());
+            String extension = "Loại: " + fileManager.byteArrayToString(entry.getExtendedName());
+            int[] date1 = new int[4];
+
+            for(int i=0;i<4;i++)
+            {
+                date1[i]=entry.getDateCreate()[i];
+            }
+            int day = date1[0];
+            int month1 = date1[1];
+            int year1 = (date1[2] & 0xFF) << 8 | (date1[3] & 0xFF);
+            String creationDate="Ngày tạo: "+day+"/"+month1+"/"+year1;
+            Log.d("TAG", creationDate);
+            // Tạo và hiển thị ImageInfoDialogFragment
+            if (context instanceof FragmentActivity) {
+                FragmentActivity activity = (FragmentActivity) context;
+                ImageInfoDialogFragment dialogFragment = ImageInfoDialogFragment.newInstance(name, extension, creationDate);
+                dialogFragment.show(activity.getSupportFragmentManager(), "image_info");
+            } else {
+                throw new IllegalStateException("Context must be an instance of FragmentActivity");
+            }
+        });
 
         if (Arrays.equals(entry.getEncrypt(), fileManager.stringToByteArray("0"))) {
             decryptButton.setVisibility(View.GONE);

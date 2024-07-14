@@ -12,8 +12,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#0E4A99"
-        app:title="DATN"
-        app:titleMarginStart="25dp"></androidx.appcompat.widget.Toolbar>
+        app:title="AN TOÀN VÀ PHỤC HỒI DỮ LIỆU"
+        app:titleMarginStart="25dp"
+        app:titleTextColor="@color/white"></androidx.appcompat.widget.Toolbar>
 
     <GridLayout
         android:layout_width="match_parent"
