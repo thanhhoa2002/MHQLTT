@@ -33,46 +33,40 @@
         android:gravity="center"
         android:padding="16dp">
 
-        <!-- Left Arrow ImageView -->
-
-        <!-- Previous Button -->
-        <Button
-            android:id="@+id/previousButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="60dp"
-            android:backgroundTint="#5A9AEF"
-            android:text="pre"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/imageView6"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="60dp"
-            android:src="@drawable/left_arrow"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
-
         <!-- Show Image Button -->
-
         <Button
             android:id="@+id/showImageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Show Image"
             android:backgroundTint="#5A9AEF"
-            app:layout_constraintStart_toEndOf="@id/previousButton"
-            app:layout_constraintEnd_toStartOf="@id/nextButton"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- Previous Button -->
+        <Button
+            android:id="@+id/previousButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:backgroundTint="#5A9AEF"
+            android:text="pre"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/showImageButton"
+            android:layout_marginEnd="10dp"/>
+
+        <!-- Left Arrow ImageView -->
+        <ImageView
+            android:id="@+id/imageView6"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/left_arrow"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/showImageButton"
+            android:layout_marginEnd="10dp"/>
 
         <!-- Next Button -->
         <Button
@@ -82,24 +76,21 @@
             android:backgroundTint="#5A9AEF"
             android:text="next"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/showImageButton"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginStart="10dp" />
+            app:layout_constraintStart_toEndOf="@+id/showImageButton"
+            android:layout_marginStart="10dp"/>
 
         <!-- Right Arrow ImageView -->
         <ImageView
             android:id="@+id/imageView7"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="46dp"
             android:src="@drawable/right_arrow"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@id/showImageButton"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintStart_toEndOf="@id/showImageButton"
+            android:layout_marginStart="10dp"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </RelativeLayout>
