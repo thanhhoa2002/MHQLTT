@@ -36,6 +36,8 @@ import android.database.Cursor;
 import android.content.ContentResolver;
 import android.provider.OpenableColumns;
 
+import javax.crypto.spec.SecretKeySpec;
+
 public class FileManager {
     private final Context context;
     int entrySize = 256;
@@ -485,7 +487,7 @@ public class FileManager {
         }
     }
 
-    public void encryptFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry, String password) throws IOException {
+    public void encryptFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry, SecretKeySpec keySpec) throws IOException {
         long basePos = sectorSize * 6L + (long) orderOfEntry * entrySize;
 
         byte[] temp = new byte[4];
@@ -500,19 +502,6 @@ public class FileManager {
         raf.readFully(temp);
         int size = roundUp(byteArrayToInt(temp), 8192);
 
-//        byte[] cache = readImageFileData(raf, (int) startPos, size * sectorSize);
-//        byte[] encryptedBytes;
-//        try {
-//            encryptedBytes = AES.encrypt(cache, password);
-//            byte[] decryptedBytes = AES.decrypt(encryptedBytes, password);
-//            Log.d("AES", "enc" + encryptedBytes.length);
-//            Log.d("AES", "dec" + decryptedBytes.length);
-//            Log.d("AES", "goc" + cache.length);
-//            Log.d("AES", "size" + size);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-
         byte[] buffer = new byte[sectorSize];
         byte[] encryptedChunk;
         for (long pos = startPos * sectorSize; pos < (startPos + size) * sectorSize; pos += sectorSize) {
@@ -521,7 +510,7 @@ public class FileManager {
             if (bytesRead > 0) {
                 try {
                     Log.d("AES", "buf"+buffer.length);
-                    encryptedChunk = AES.encrypt(Arrays.copyOf(buffer, bytesRead), password);
+                    encryptedChunk = AES.encrypt(Arrays.copyOf(buffer, bytesRead), keySpec);
                     raf.seek(pos);
                     raf.write(encryptedChunk, 0, encryptedChunk.length);
                     Log.d("AES", "en"+encryptedChunk.length);
@@ -531,14 +520,17 @@ public class FileManager {
             }
         }
 
-        raf.seek(basePos + 210);
+        byte[] keyBytes = keySpec.getEncoded();
+        raf.seek(basePos + 178);
+        raf.write(keyBytes);
+
         raf.write(stringToByteArray("1"));
 
         DirectoryEntry entry = readFileEntry(raf, orderOfEntry);
         entries.set(orderOfEntry, entry);
     }
 
-    public void decryptFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry, String password) throws IOException {
+    public void decryptFile(RandomAccessFile raf, List<DirectoryEntry> entries, int orderOfEntry, SecretKeySpec keySpec) throws IOException {
         long basePos = sectorSize * 6L + (long) orderOfEntry * entrySize;
 
         byte[] temp = new byte[4];
@@ -561,7 +553,7 @@ public class FileManager {
             int bytesRead = raf.read(buffer, 0, sectorSize);
             if (bytesRead > 0) {
                 try {
-                    decryptedChunk = AES.decrypt(Arrays.copyOf(buffer, bytesRead), password);
+                    decryptedChunk = AES.decrypt(Arrays.copyOf(buffer, bytesRead), keySpec);
                     raf.seek(pos);
                     raf.write(decryptedChunk, 0, decryptedChunk.length);
                     Log.d("AES", "de"+decryptedChunk.length);
@@ -570,6 +562,10 @@ public class FileManager {
                 }
             }
         }
+
+        byte[] tempBuffer = new byte[32];
+        raf.seek(basePos + 178);
+        raf.write(tempBuffer);
 
         raf.seek(basePos + 210);
         raf.write(stringToByteArray("0"));

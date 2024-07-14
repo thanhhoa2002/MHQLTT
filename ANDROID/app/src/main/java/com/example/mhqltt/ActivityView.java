@@ -2,19 +2,17 @@ package com.example.mhqltt;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -27,10 +25,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 public class ActivityView extends AppCompatActivity {
     private FileManager fileManager;
@@ -47,12 +48,16 @@ public class ActivityView extends AppCompatActivity {
     private List<EmptySectorManagement> lesm;
 
     Spinner spinnerSort;
+
+    private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES/ECB/NoPadding";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder);
 
-        spinnerSort= (Spinner) findViewById(R.id.spinner);
+        spinnerSort = findViewById(R.id.spinner);
 
         recyclerView = findViewById(R.id.recyclerView);
         showImageButton = findViewById(R.id.showImageButton);
@@ -72,68 +77,29 @@ public class ActivityView extends AppCompatActivity {
         final int cacheSize = maxMemory / 8;
         bitmapCache = new LruCache<>(cacheSize);
 
-
-//        File dir = getFilesDir();
-//        File file = new File(dir, ".NEW");
-//        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-//            directoryEntries = fileManager.readAllEntries(raf);
-//            lesm = fileManager.readEmptyArea(raf);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-
         spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(ActivityView.this, "Selected: " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
-
-                if (position == 0) {
-                    File dir = getFilesDir();
-                    File file = new File(dir, ".NEW");
-                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-                        directoryEntries = fileManager.readAllEntries(raf);
-                        lesm = fileManager.readEmptyArea(raf);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    loadCurrentPageImages();
-                } else if (position == 1 || position == 2) {
-                    currentPage = 0;
-                    File dir = getFilesDir();
-                    File file = new File(dir, ".NEW");
-                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-                        directoryEntries = fileManager.readAllEntries(raf);
+                File dir = getFilesDir();
+                File file = new File(dir, ".NEW");
+                try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                    directoryEntries = fileManager.readAllEntries(raf);
+                    lesm = fileManager.readEmptyArea(raf);
+                    if (position == 1 || position == 2) {
                         fileManager.sortEntriesBasedOnDateCreate(directoryEntries, position);
-                        lesm = fileManager.readEmptyArea(raf);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
                     }
-                    loadCurrentPageImages();
-                } else if (position == 3) {
                     currentPage = 0;
-                    int year=0;
-                    int month=0;
-                    File dir = getFilesDir();
-                    File file = new File(dir, ".NEW");
-                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-                        directoryEntries = fileManager.readAllEntries(raf);
-                        // Assuming you have a method to filter entries by selected date
-                        showMonthYearPickerDialog(directoryEntries);
-                        Log.d("TAG","size"+directoryEntries.size());
-                        lesm = fileManager.readEmptyArea(raf);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-//                    loadCurrentPageImages();
+                    loadCurrentPageImages();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                // Do nothing
             }
         });
-
 
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
@@ -170,22 +136,8 @@ public class ActivityView extends AppCompatActivity {
                 }
             }
         });
-
-//        loadCurrentPageImages();
     }
 
-    private void showMonthYearPickerDialog(List<DirectoryEntry> entries) {
-        MonthYearPickerDialog pd = new MonthYearPickerDialog(ActivityView.this,
-                new MonthYearPickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(int year, int month) {
-
-                        fileManager.filterEntriesByMonthYear(entries,year, month);
-                        loadCurrentPageImages();
-                    }
-                });
-        pd.show();
-    }
     @Override
     public void onBackPressed() {
         File dir = getFilesDir();
@@ -284,7 +236,7 @@ public class ActivityView extends AppCompatActivity {
                 showBitmapDialog(context, bitmap, entry);
             }
         } else {
-            // Hiển thị hình ảnh từ tài nguyên nếu ảnh đã bị mã hóa
+            // Show encrypted image
             showImageDialogWithResource(context, R.drawable.encrypt, entry);
         }
     }
@@ -337,30 +289,76 @@ public class ActivityView extends AppCompatActivity {
 
         if (Arrays.equals(entry.getEncrypt(), fileManager.stringToByteArray("0"))) {
             decryptButton.setVisibility(View.GONE);
-            encryptButton.setOnClickListener(v -> {
+            encryptButton.setOnClickListener(v -> showPasswordInputDialog(context, password -> {
                 File file = new File(getFilesDir(), ".NEW");
                 try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                    fileManager.encryptFile(raf, directoryEntries, directoryEntries.indexOf(entry), "1234567890123456");
+                    fileManager.encryptFile(raf, directoryEntries, directoryEntries.indexOf(entry), getKeyFromPassword(password));
                     dialog.dismiss();
                     loadCurrentPageImages();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-            });
+            }));
         } else {
             encryptButton.setVisibility(View.GONE);
-            decryptButton.setOnClickListener(v -> {
-                File file = new File(getFilesDir(), ".NEW");
-                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                    fileManager.decryptFile(raf, directoryEntries, directoryEntries.indexOf(entry), "1234567890123456");
-                    dialog.dismiss();
-                    loadCurrentPageImages();
-                } catch (IOException e) {
-                    e.printStackTrace();
+            decryptButton.setOnClickListener(v -> showPasswordInputDialog(context, password -> {
+                try {
+                    if (Arrays.equals(entry.getPassword(), getKeyFromPassword(password).getEncoded())) {
+                        File file = new File(getFilesDir(), ".NEW");
+                        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                            fileManager.decryptFile(raf, directoryEntries, directoryEntries.indexOf(entry), getKeyFromPassword(password));
+                            dialog.dismiss();
+                            loadCurrentPageImages();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Toast.makeText(context, "Incorrect password", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
-            });
+            }));
         }
 
         dialog.show();
+    }
+
+    private void showPasswordInputDialog(Context context, PasswordCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_password_input, null);
+
+        EditText passwordInput = dialogView.findViewById(R.id.passwordInput);
+        Button confirmButton = dialogView.findViewById(R.id.confirmButton);
+
+        builder.setView(dialogView);
+
+        AlertDialog passwordDialog = builder.create();
+
+        confirmButton.setOnClickListener(v -> {
+            String password = passwordInput.getText().toString();
+            if (!password.isEmpty()) {
+                callback.onPasswordEntered(password);
+                passwordDialog.dismiss();
+            } else {
+                Toast.makeText(context, "Please enter a password", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        passwordDialog.show();
+    }
+
+    private static SecretKeySpec getKeyFromPassword(String password) throws Exception {
+        // Hash the password using SHA-256
+        MessageDigest sha = MessageDigest.getInstance("SHA-256");
+        byte[] key = sha.digest(password.getBytes("UTF-8"));
+
+        // Use the full 32 bytes (256 bits) for the AES key
+        return new SecretKeySpec(key, ALGORITHM);
+    }
+
+    private interface PasswordCallback {
+        void onPasswordEntered(String password);
     }
 }
