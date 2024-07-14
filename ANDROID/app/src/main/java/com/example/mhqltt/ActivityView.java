@@ -81,25 +81,53 @@ public class ActivityView extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(ActivityView.this, "Selected: " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
-                File dir = getFilesDir();
-                File file = new File(dir, ".NEW");
-                try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-                    directoryEntries = fileManager.readAllEntries(raf);
-                    lesm = fileManager.readEmptyArea(raf);
-                    if (position == 1 || position == 2) {
-                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries, position);
+
+                if (position == 0) {
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                    currentPage = 0;
                     loadCurrentPageImages();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                } else if (position == 1 || position == 2) {
+                    currentPage = 0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries, position);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    loadCurrentPageImages();
+                } else if (position == 3) {
+                    currentPage = 0;
+                    int year=0;
+                    int month=0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        // Assuming you have a method to filter entries by selected date
+                        showMonthYearPickerDialog(directoryEntries);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+//                    loadCurrentPageImages();
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
             }
         });
+
 
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
@@ -138,6 +166,19 @@ public class ActivityView extends AppCompatActivity {
         });
     }
 
+
+    private void showMonthYearPickerDialog(List<DirectoryEntry> entries) {
+        MonthYearPickerDialog pd = new MonthYearPickerDialog(ActivityView.this,
+                new MonthYearPickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(int year, int month) {
+
+                        fileManager.filterEntriesByMonthYear(entries,year, month);
+                        loadCurrentPageImages();
+                    }
+                });
+        pd.show();
+    }
     @Override
     public void onBackPressed() {
         File dir = getFilesDir();
@@ -276,7 +317,6 @@ public class ActivityView extends AppCompatActivity {
             int month1 = date1[1];
             int year1 = (date1[2] & 0xFF) << 8 | (date1[3] & 0xFF);
             String creationDate="Ngày tạo: "+day+"/"+month1+"/"+year1;
-            Log.d("TAG", creationDate);
             // Tạo và hiển thị ImageInfoDialogFragment
             if (context instanceof FragmentActivity) {
                 FragmentActivity activity = (FragmentActivity) context;
