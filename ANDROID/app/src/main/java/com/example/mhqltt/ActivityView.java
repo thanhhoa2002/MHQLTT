@@ -2,6 +2,7 @@ package com.example.mhqltt;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -27,6 +29,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 public class ActivityView extends AppCompatActivity {
@@ -83,6 +86,7 @@ public class ActivityView extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(ActivityView.this, "Selected: " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
+
                 if (position == 0) {
                     File dir = getFilesDir();
                     File file = new File(dir, ".NEW");
@@ -93,42 +97,43 @@ public class ActivityView extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                     loadCurrentPageImages();
-                }
-                else if(position==1)
-                {
-                    currentPage=0;
+                } else if (position == 1 || position == 2) {
+                    currentPage = 0;
                     File dir = getFilesDir();
                     File file = new File(dir, ".NEW");
                     try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                         directoryEntries = fileManager.readAllEntries(raf);
-                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries,position);
+                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries, position);
                         lesm = fileManager.readEmptyArea(raf);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                     loadCurrentPageImages();
-                }
-                else if(position==2)
-                {
-                    currentPage=0;
+                } else if (position == 3) {
+                    currentPage = 0;
+                    int year=0;
+                    int month=0;
                     File dir = getFilesDir();
                     File file = new File(dir, ".NEW");
                     try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                         directoryEntries = fileManager.readAllEntries(raf);
-                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries,position);
+                        // Assuming you have a method to filter entries by selected date
+                        showMonthYearPickerDialog(directoryEntries);
+                        Log.d("TAG","size"+directoryEntries.size());
                         lesm = fileManager.readEmptyArea(raf);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    loadCurrentPageImages();
+//                    loadCurrentPageImages();
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
+                // Do nothing
             }
         });
+
 
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
@@ -169,6 +174,18 @@ public class ActivityView extends AppCompatActivity {
 //        loadCurrentPageImages();
     }
 
+    private void showMonthYearPickerDialog(List<DirectoryEntry> entries) {
+        MonthYearPickerDialog pd = new MonthYearPickerDialog(ActivityView.this,
+                new MonthYearPickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(int year, int month) {
+
+                        fileManager.filterEntriesByMonthYear(entries,year, month);
+                        loadCurrentPageImages();
+                    }
+                });
+        pd.show();
+    }
     @Override
     public void onBackPressed() {
         File dir = getFilesDir();
