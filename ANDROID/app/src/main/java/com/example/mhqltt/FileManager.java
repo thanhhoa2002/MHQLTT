@@ -660,6 +660,31 @@ public class FileManager {
         return (num + divisor - 1) / divisor;
     }
 
+    public void filterEntriesByMonthYear(List<DirectoryEntry> entries, int year, int month){
+        List<DirectoryEntry> filteredEntries = new ArrayList<>();
+        byte[] dateCreates;
+        for(int i=0;i<entries.size();i++){
+            dateCreates = new byte[4];
+            if(entries.get(i)!=null){
+                for (int k = 0; k < 4; k++) {
+                    dateCreates[k] = entries.get(i).getDateCreate()[k];
+                }
+                int monthEntry = dateCreates[1];
+                int yearEntry = (dateCreates[2] & 0xFF) << 8 | (dateCreates[3] & 0xFF);
+                Log.d("TAG","month"+ monthEntry);
+                if(monthEntry==month+1 && yearEntry==year)
+                {
+                    Log.d("TAG","vao day");
+                    filteredEntries.add(entries.get(i));
+                }
+            }
+        }
+        entries.clear();
+        entries.addAll(filteredEntries);
+
+    }
+
+
     public void sortEntriesBasedOnDateCreate(List<DirectoryEntry> entries,int temp) {
         boolean swapped;
         byte[] dateCreates;
