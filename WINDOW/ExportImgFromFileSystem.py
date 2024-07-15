@@ -41,5 +41,5 @@ def process_file(file_path):
         print(f"An error occurred: {e}")
 
 # Sử dụng hàm
-process_file('30mar.img')
+process_file('C:/Users/leanh/Downloads/sda_dump.img')
 

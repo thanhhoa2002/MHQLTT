@@ -566,6 +566,7 @@ public class FileManager {
             if (bytesRead > 0) {
                 try {
                     decryptedChunk = AES.decrypt(Arrays.copyOf(buffer, bytesRead), keySpec);
+//                    Log.d("AES", "de"+filedecryptedChunk.length);
                     raf.seek(pos);
                     raf.write(decryptedChunk, 0, decryptedChunk.length);
                     Log.d("AES", "de"+decryptedChunk.length);
