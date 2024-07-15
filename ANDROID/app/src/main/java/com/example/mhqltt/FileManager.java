@@ -157,6 +157,19 @@ public class FileManager {
         return header;
     }
 
+    private void writeHeader(RandomAccessFile raf, Header header) throws IOException {
+        raf.seek(0); // Di chuyển con trỏ file tới vị trí đầu tiên
+
+        raf.write(header.getType());
+        raf.write(header.getSize());
+        raf.write(header.getPassword());
+        raf.write(header.getDateCreate());
+        raf.write(header.getDateModify());
+        raf.write(header.getTimeCreate());
+        raf.write(header.getTimeModify());
+        raf.write(header.getOwnerSign());
+    }
+
     public Header createVolume() {
         Header header = createHeader();
 
@@ -168,16 +181,7 @@ public class FileManager {
             raf.setLength((long)byteArrayToInt(header.getSize()) * 1024);
 
             // Header
-            raf.seek(0);
-
-            raf.write(header.getType());
-            raf.write(header.getSize());
-            raf.write(header.getPassword());
-            raf.write(header.getDateCreate());
-            raf.write(header.getDateModify());
-            raf.write(header.getTimeCreate());
-            raf.write(header.getTimeModify());
-            raf.write(header.getOwnerSign());
+            writeHeader(raf, header);
 
             raf.close();
             Log.d("File", "File created successfully");
@@ -414,6 +418,14 @@ public class FileManager {
         return esm;
     }
 
+    public void deleteDataFile(RandomAccessFile raf, EmptySectorManagement esm) throws IOException {
+        byte[] buffer = new byte[esm.getSize() * sectorSize];
+        Arrays.fill(buffer, (byte) 0);
+
+        raf.seek((long) esm.getStartPos() * sectorSize);
+        raf.write(buffer);
+    }
+
     public List<EmptySectorManagement> emptyAreaProcessing(List<EmptySectorManagement> lesm, EmptySectorManagement esm) {
         List<EmptySectorManagement> result = new ArrayList<>();
 
@@ -572,6 +584,62 @@ public class FileManager {
 
         DirectoryEntry entry = readFileEntry(raf, orderOfEntry);
         entries.set(orderOfEntry, entry);
+    }
+
+    public void reconstructFolder() {
+        File dir = context.getFilesDir();
+        File oldFile = new File(dir, ".NEW");
+        File newFile = new File(dir, ".NEW_TEMP");
+
+        try {
+            RandomAccessFile rafOld = new RandomAccessFile(oldFile, "r");
+            RandomAccessFile rafNew = new RandomAccessFile(newFile, "rw");
+
+            Header header = readHeader();
+
+            header.setSize(intToByteArray(2608));
+            rafNew.setLength((long)byteArrayToInt(header.getSize()) * 1024);
+            byte[] date = new byte[4];
+            byte[] time = new byte[3];
+            getCurrentDateTimeInBytes(date, time);
+            header.setDateModify(date);
+            header.setTimeModify(time);
+
+            writeHeader(rafNew, header);
+
+            List<DirectoryEntry> entries = readAllEntries(rafOld);
+
+            for (DirectoryEntry entry : entries) {
+                if (entry != null && Arrays.equals(entry.getState(), stringToByteArray("0")) && Arrays.equals(entry.getEncrypt(), stringToByteArray("0"))) {
+                    int dataPos = byteArrayToInt(entry.getDataPos());
+                    int dataSize = byteArrayToInt(entry.getSize());
+                    byte[] data = readImageFileData(rafOld, dataPos, dataSize);
+
+                    int newDataPos = (int) (rafNew.length() / sectorSize);
+
+                    try (FileOutputStream fos = new FileOutputStream(newFile, true)) {
+                        fos.write(data);
+
+                        int cacheSectorSize = (data.length + sectorSize - 1) / sectorSize;
+                        byte[] padding = new byte[cacheSectorSize * sectorSize - data.length];
+                        fos.write(padding);
+                    }
+
+                    entry.setDataPos(intToByteArray(newDataPos));
+                    writeImageFileDirectoryEntry(rafNew, entry);
+                }
+            }
+
+            rafOld.close();
+            rafNew.close();
+
+            if (oldFile.delete()) {
+                newFile.renameTo(oldFile);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public byte[] padding(byte[] data, int size) {

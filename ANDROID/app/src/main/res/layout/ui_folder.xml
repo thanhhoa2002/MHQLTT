@@ -40,7 +40,7 @@
         android:id="@+id/view_image"
         android:layout_width="244dp"
         android:layout_height="70dp"
-        android:layout_marginTop="132dp"
+        android:layout_marginTop="100dp"
         android:backgroundTint="#5A9AEF"
         android:drawablePadding="1dp"
         android:text="Thư viện"
@@ -78,6 +78,20 @@
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/delete_image"
+        app:layout_constraintWidth_percent="0.9" />
+
+    <Button
+        android:id="@+id/reconstruct_folder"
+        android:layout_width="244dp"
+        android:layout_height="70dp"
+        android:layout_marginTop="56dp"
+        android:backgroundTint="#5A9AEF"
+        android:text="Tái cấu trúc"
+        android:textSize="18dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/restore_image"
         app:layout_constraintWidth_percent="0.9" />
 
 

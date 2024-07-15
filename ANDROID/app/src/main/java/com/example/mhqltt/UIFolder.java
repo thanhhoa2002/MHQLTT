@@ -7,10 +7,13 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class UIFolder extends AppCompatActivity {
     private static final int REQUEST_IMAGE_SELECT = 1;
@@ -67,9 +70,22 @@ public class UIFolder extends AppCompatActivity {
         restoreImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Intent intent = new Intent(UIFolder.this, ActivityRestore.class);
                 startActivity(intent);
+            }
+        });
+
+        Button reconstructButton = findViewById(R.id.reconstruct_folder);
+        reconstructButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fileManager.reconstructFolder();
+                try {
+                    header = fileManager.readHeader();
+                    Toast.makeText(UIFolder.this, "Tái cấu trúc thành công", Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
