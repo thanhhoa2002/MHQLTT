@@ -208,6 +208,7 @@ public class ActivityDelete extends AppCompatActivity {
             ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
             Button tempDeleteButton = dialogView.findViewById(R.id.temp_delete_button);
             Button fullDeleteButton = dialogView.findViewById(R.id.full_delete_button);
+            Button fullDataDeleteButton = dialogView.findViewById(R.id.full_data_delete_button);
 
             imageView.setImageBitmap(bitmap);
 
@@ -228,6 +229,18 @@ public class ActivityDelete extends AppCompatActivity {
             fullDeleteButton.setOnClickListener(v -> {
                 try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
                     EmptySectorManagement esm = fileManager.fullDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
+                    lesm = fileManager.emptyAreaProcessing(lesm, esm);
+                    dialog.dismiss();
+                    loadCurrentPageImages(); // Refresh the current page to reflect changes
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            fullDataDeleteButton.setOnClickListener(v -> {
+                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                    EmptySectorManagement esm = fileManager.fullDeleteFile(raf, directoryEntries, directoryEntries.indexOf(entry));
+                    fileManager.deleteDataFile(raf, esm);
                     lesm = fileManager.emptyAreaProcessing(lesm, esm);
                     dialog.dismiss();
                     loadCurrentPageImages(); // Refresh the current page to reflect changes

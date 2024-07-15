@@ -414,6 +414,14 @@ public class FileManager {
         return esm;
     }
 
+    public void deleteDataFile(RandomAccessFile raf, EmptySectorManagement esm) throws IOException {
+        byte[] buffer = new byte[esm.getSize() * sectorSize];
+        Arrays.fill(buffer, (byte) 0);
+
+        raf.seek((long) esm.getStartPos() * sectorSize);
+        raf.write(buffer);
+    }
+
     public List<EmptySectorManagement> emptyAreaProcessing(List<EmptySectorManagement> lesm, EmptySectorManagement esm) {
         List<EmptySectorManagement> result = new ArrayList<>();
 
