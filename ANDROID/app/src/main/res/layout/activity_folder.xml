@@ -78,35 +78,37 @@
             android:id="@+id/previousButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginEnd="10dp"
             android:backgroundTint="#5A9AEF"
             android:text="pre"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/showImageButton"
-            android:layout_marginEnd="10dp"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Left Arrow ImageView -->
         <ImageView
             android:id="@+id/imageView6"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="8dp"
             android:src="@drawable/left_arrow"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@id/showImageButton"
-            android:layout_marginEnd="10dp"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Next Button -->
         <Button
             android:id="@+id/nextButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginStart="10dp"
             android:backgroundTint="#5A9AEF"
             android:text="next"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@+id/showImageButton"
-            android:layout_marginStart="10dp"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Right Arrow ImageView -->
         <ImageView
