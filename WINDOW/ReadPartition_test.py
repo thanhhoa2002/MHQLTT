@@ -44,25 +44,7 @@ def analyze_ext4(img_info):
     
     return directory_tree
 
-def main(image_path):
-    img_info = open_image(image_path)
-    directory_tree = analyze_ext4(img_info)
-    print("Directory Tree:")
-    print_directory_tree(directory_tree)
-
-    print("------------------------------------------------------")
-    file_name = "yuta.jpeg"
-    file_info = find_file_in_tree(directory_tree, file_name)
-    if file_info:
-        path, blocks = file_info
-        data = extract_data_from_blocks(img_info, blocks)
-        
-        # Write data to a file with the same name
-        with open(file_name, 'wb') as f:
-            f.write(data)
-        print(f"\nExtracted data written to '{file_name}'")
-    else:
-        print(f"\nFile '{file_name}' not found in the directory tree.")
+    
 
 def print_directory_tree(directory_tree, indent=0):
     """Print the directory tree."""
@@ -97,6 +79,11 @@ def find_file_in_tree(directory_tree, file_name):
             if key == file_name:
                 return path, blocks
     return None
+
+
+def main(image_path):
+    img_info = open_image(image_path)
+    
 
 # Replace 'path_to_image_file.img' with the actual path to your .img file
 main('D:\Disks\\30mar.img')
