@@ -173,7 +173,7 @@
             android:background="@drawable/btn_background_1">
 
             <Button
-                android:id="@+id/btn_fullscreen4"
+                android:id="@+id/btn_guide"
                 android:layout_width="150dp"
                 android:layout_height="296dp"
                 android:background="@android:color/transparent"

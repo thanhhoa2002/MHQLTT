@@ -16,19 +16,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- Spinner inside the RelativeLayout -->
-            <Spinner
-                android:id="@+id/spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:entries="@array/spinner_items"
-                android:minWidth="48dp"
-                android:minHeight="48dp"
-                android:padding="8dp" />
-
-
                 <TextView
                     android:id="@+id/textView"
                     android:layout_width="wrap_content"
@@ -65,7 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="#5A9AEF"
-            android:text="View Image" />
+            android:text="Chọn ảnh" />
 
     </LinearLayout>
 </RelativeLayout>
