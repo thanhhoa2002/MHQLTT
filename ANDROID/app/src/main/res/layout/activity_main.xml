@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
+
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_main"
@@ -208,52 +210,3 @@
     </GridLayout>
 
 </LinearLayout>
-
-
-    <!--    <Button-->
-    <!--        android:id="@+id/main_button_2"-->
-    <!--        android:layout_width="244dp"-->
-    <!--        android:layout_height="70dp"-->
-    <!--        android:layout_marginTop="60dp"-->
-    <!--        android:backgroundTint="@color/design_default_color_secondary_variant"-->
-    <!--        android:text="Xóa ảnh"-->
-    <!--        android:textSize="18dp"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintHorizontal_bias="0.497"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toBottomOf="@+id/main_button_1"-->
-    <!--        app:layout_constraintWidth_percent="0.9" />-->
-
-    <!--    <Button-->
-    <!--        android:id="@+id/main_button_1"-->
-    <!--        android:layout_width="244dp"-->
-    <!--        android:layout_height="70dp"-->
-    <!--        android:layout_marginTop="152dp"-->
-    <!--        android:backgroundTint="@color/design_default_color_secondary_variant"-->
-    <!--        android:drawablePadding="1dp"-->
-    <!--        android:text="Tập tin của bạn"-->
-    <!--        android:textSize="18dp"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintHorizontal_bias="0.497"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent"-->
-    <!--        app:layout_constraintWidth_percent="0.9" />-->
-
-
-    <!--    <Button-->
-    <!--        android:id="@+id/main_button_3"-->
-    <!--        android:layout_width="244dp"-->
-    <!--        android:layout_height="70dp"-->
-    <!--        android:backgroundTint="@color/design_default_color_secondary_variant"-->
-    <!--        android:text="Phục hồi ảnh"-->
-    <!--        android:textSize="18dp"-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintHorizontal_bias="0.497"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent"-->
-    <!--        app:layout_constraintVertical_bias="0.524"-->
-    <!--        app:layout_constraintWidth_percent="0.9" />-->
-
-
-    <!--</androidx.constraintlayout.widget.ConstraintLayout>-->

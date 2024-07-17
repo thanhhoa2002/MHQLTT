@@ -7,6 +7,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
+
 public class ImageDialogRecovery extends Dialog {
 
     private Bitmap image;
@@ -24,6 +26,7 @@ public class ImageDialogRecovery extends Dialog {
         setContentView(R.layout.dialog_recovery);
 
         ImageView imageView = findViewById(R.id.dialogImageView);
-        imageView.setImageBitmap(image);
+//        imageView.setImageBitmap(image);
+        Glide.with(getContext()).load(imageUri).into(imageView);
     }
 }

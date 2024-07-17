@@ -10,10 +10,14 @@ import android.os.Bundle;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,6 +42,7 @@ public class ActivityRestore extends AppCompatActivity {
     private LruCache<String, Bitmap> bitmapCache;
     private List<EmptySectorManagement> lesm;
 
+    Spinner spinnerSort;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +53,7 @@ public class ActivityRestore extends AppCompatActivity {
         previousButton = findViewById(R.id.previousButton);
         nextButton = findViewById(R.id.nextButton);
         fileManager = new FileManager(this);
+        spinnerSort = findViewById(R.id.spinner);
 
         recyclerView.setLayoutManager(new GridLayoutManager(this, 3)); // Set GridLayoutManager with 3 columns
 
@@ -69,6 +75,56 @@ public class ActivityRestore extends AppCompatActivity {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(ActivityRestore.this, "Selected: " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
+
+                if (position == 0) {
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    loadCurrentPageImages();
+                } else if (position == 1 || position == 2) {
+                    currentPage = 0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries, position);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    loadCurrentPageImages();
+                } else if (position == 3) {
+                    currentPage = 0;
+                    int year=0;
+                    int month=0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        // Assuming you have a method to filter entries by selected date
+                        showMonthYearPickerDialog(directoryEntries);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+//                    loadCurrentPageImages();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
 
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
@@ -96,6 +152,8 @@ public class ActivityRestore extends AppCompatActivity {
             }
         });
 
+
+
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -106,9 +164,21 @@ public class ActivityRestore extends AppCompatActivity {
             }
         });
 
-        loadCurrentPageImages();
+//        loadCurrentPageImages();
     }
 
+    private void showMonthYearPickerDialog(List<DirectoryEntry> entries) {
+        MonthYearPickerDialog pd = new MonthYearPickerDialog(ActivityRestore.this,
+                new MonthYearPickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(int year, int month) {
+
+                        fileManager.filterEntriesByMonthYear(entries,year, month);
+                        loadCurrentPageImages();
+                    }
+                });
+        pd.show();
+    }
     @Override
     public void onBackPressed() {
         File dir = getFilesDir();
@@ -206,12 +276,36 @@ public class ActivityRestore extends AppCompatActivity {
             ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
             Button restoreButton = dialogView.findViewById(R.id.restore_button);
             Button fullDeleteButton = dialogView.findViewById(R.id.full_delete_button);
-
+            Button infImage= dialogView.findViewById(R.id.informationImage);
             imageView.setImageBitmap(bitmap);
 
             builder.setView(dialogView);
 
             AlertDialog dialog = builder.create();
+
+            infImage.setOnClickListener(v -> {
+                // Lấy thông tin từ DirectoryEntry
+                String name = "Tên ảnh: " + fileManager.byteArrayToString(entry.getName());
+                String extension = "Loại: " + fileManager.byteArrayToString(entry.getExtendedName());
+                int[] date1 = new int[4];
+
+                for(int i=0;i<4;i++)
+                {
+                    date1[i]=entry.getDateCreate()[i];
+                }
+                int day = date1[0];
+                int month1 = date1[1];
+                int year1 = (date1[2] & 0xFF) << 8 | (date1[3] & 0xFF);
+                String creationDate="Ngày tạo: "+day+"/"+month1+"/"+year1;
+                // Tạo và hiển thị ImageInfoDialogFragment
+                if (context instanceof FragmentActivity) {
+                    FragmentActivity activity = (FragmentActivity) context;
+                    ImageInfoDialogFragment dialogFragment = ImageInfoDialogFragment.newInstance(name, extension, creationDate);
+                    dialogFragment.show(activity.getSupportFragmentManager(), "image_info");
+                } else {
+                    throw new IllegalStateException("Context must be an instance of FragmentActivity");
+                }
+            });
 
             restoreButton.setOnClickListener(v -> {
                 try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {

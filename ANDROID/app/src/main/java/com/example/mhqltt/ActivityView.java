@@ -65,6 +65,7 @@ public class ActivityView extends AppCompatActivity {
         nextButton = findViewById(R.id.nextButton);
         fileManager = new FileManager(this);
 
+
         recyclerView.setLayoutManager(new GridLayoutManager(this, 3)); // Set GridLayoutManager with 3 columns
 
         displayedImages = new ArrayList<>();
@@ -129,12 +130,14 @@ public class ActivityView extends AppCompatActivity {
         });
 
 
+
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Bitmap image, DirectoryEntry entry) {
                 selectedEntry = entry;
             }
         });
+
 
         showImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
