@@ -13,6 +13,35 @@
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme">
 
+        <!-- Add a RelativeLayout inside Toolbar -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Spinner inside the RelativeLayout -->
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:entries="@array/spinner_items"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:padding="8dp" />
+
+            <!-- TextView inside the RelativeLayout -->
+<!--            <TextView-->
+<!--                android:id="@+id/textView"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_gravity="start|center_vertical"-->
+<!--                android:layout_marginStart="16dp"-->
+<!--                android:text="Thư viện"-->
+<!--                android:textColor="@android:color/white"-->
+<!--                android:textSize="25sp" />-->
+
+        </RelativeLayout>
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.recyclerview.widget.RecyclerView

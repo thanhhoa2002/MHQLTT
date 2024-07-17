@@ -13,9 +13,12 @@ import android.os.Bundle;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.app.AlertDialog;
 import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,10 +41,13 @@ public class ActivityDelete extends AppCompatActivity {
     private LruCache<String, Bitmap> bitmapCache;
     private List<EmptySectorManagement> lesm;
 
+    Spinner spinnerSort;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fileshow);
+        spinnerSort = findViewById(R.id.spinner);
 
         recyclerView = findViewById(R.id.recyclerView);
         showImageButton = findViewById(R.id.showImageButton);
@@ -61,14 +67,65 @@ public class ActivityDelete extends AppCompatActivity {
         final int cacheSize = maxMemory / 8;
         bitmapCache = new LruCache<>(cacheSize);
 
-        File dir = getFilesDir();
-        File file = new File(dir, ".NEW");
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            directoryEntries = fileManager.readAllEntries(raf);
-            lesm = fileManager.readEmptyArea(raf);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        File dir = getFilesDir();
+//        File file = new File(dir, ".NEW");
+//        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+//            directoryEntries = fileManager.readAllEntries(raf);
+//            lesm = fileManager.readEmptyArea(raf);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+
+        spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(ActivityDelete.this, "Selected: " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
+
+                if (position == 0) {
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    loadCurrentPageImages();
+                } else if (position == 1 || position == 2) {
+                    currentPage = 0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        fileManager.sortEntriesBasedOnDateCreate(directoryEntries, position);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    loadCurrentPageImages();
+                } else if (position == 3) {
+                    currentPage = 0;
+                    int year=0;
+                    int month=0;
+                    File dir = getFilesDir();
+                    File file = new File(dir, ".NEW");
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                        directoryEntries = fileManager.readAllEntries(raf);
+                        // Assuming you have a method to filter entries by selected date
+                        showMonthYearPickerDialog(directoryEntries);
+                        lesm = fileManager.readEmptyArea(raf);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+//                    loadCurrentPageImages();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
 
         imageAdapter.setOnItemClickListener(new ImageAdapter.OnItemClickListener() {
             @Override
@@ -106,9 +163,22 @@ public class ActivityDelete extends AppCompatActivity {
             }
         });
 
-        loadCurrentPageImages();
+//        loadCurrentPageImages();
     }
 
+
+    private void showMonthYearPickerDialog(List<DirectoryEntry> entries) {
+        MonthYearPickerDialog pd = new MonthYearPickerDialog(ActivityDelete.this,
+                new MonthYearPickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(int year, int month) {
+
+                        fileManager.filterEntriesByMonthYear(entries,year, month);
+                        loadCurrentPageImages();
+                    }
+                });
+        pd.show();
+    }
     @Override
     public void onBackPressed() {
         File dir = getFilesDir();
