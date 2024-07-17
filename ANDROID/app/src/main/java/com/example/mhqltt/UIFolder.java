@@ -52,8 +52,11 @@ public class UIFolder extends AppCompatActivity {
         addImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, REQUEST_IMAGE_SELECT);
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(Intent.createChooser(intent, "Select Image"), REQUEST_IMAGE_SELECT);
+
             }
         });
 
@@ -97,6 +100,7 @@ public class UIFolder extends AppCompatActivity {
             Uri selectedImageUri = data.getData();
             try {
                 fileManager.writeImageFile(selectedImageUri, header);
+
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

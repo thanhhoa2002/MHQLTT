@@ -81,9 +81,9 @@ public class FileManager {
     public Header createHeader() {
         Header header = new Header();
 
-        String password = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        String password = "";
         // input password and hash
-        String ownerSign = "aaaaaaaaaa";
+        String ownerSign = Build.MODEL;
         // input owner sign
 
         byte[] date = new byte[4];
@@ -92,12 +92,12 @@ public class FileManager {
 
         header.setType(stringToByteArray(".NEW"));
         header.setSize(intToByteArray(2608)); // 25165824
-        header.setPassword(stringToByteArray(password));
+        header.setPassword(padding(stringToByteArray(password),32));
         header.setDateCreate(date);
         header.setDateModify(date);
         header.setTimeCreate(time);
         header.setTimeModify(time);
-        header.setOwnerSign(stringToByteArray(ownerSign));
+        header.setOwnerSign(padding(stringToByteArray(ownerSign), 10));
 
         return header;
     }
