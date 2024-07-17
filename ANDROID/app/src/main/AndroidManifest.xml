@@ -16,6 +16,9 @@
             android:name=".ActivityRecovery"
             android:exported="false" />
         <activity
+            android:name=".ActivityGuide"
+            android:exported="false" />
+        <activity
             android:name=".ActivityView"
             android:exported="false" />
         <activity

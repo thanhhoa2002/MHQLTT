@@ -56,6 +56,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+       Button guide=findViewById(R.id.btn_guide);
+        guide.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this, ActivityGuide.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.R)

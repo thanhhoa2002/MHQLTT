@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#0E4A99"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme">
+
+        <!-- Add a RelativeLayout inside Toolbar -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="16dp"
+                android:text="Hướng dẫn sử dụng"
+                android:textColor="@android:color/white"
+                android:textSize="25sp" />
+
+        </RelativeLayout>
+    </androidx.appcompat.widget.Toolbar>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Để sử dụng thư viện của hệ thống, người dùng chọn 'Tập tin của bạn'. Chương trình sẽ hiện ra 'màn hình chính' để hiện các chức năng sau:"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="- 'Thêm ảnh' để người dùng sẽ chọn các tấm ảnh cần được sao lưu và bảo vệ từ thư viện cá nhân đưa vào ứng dụng"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="- 'Mã hóa/ giải mã ảnh' người dùng cần vào ứng dụng chọn xem ảnh, trong màn hình xem ảnh có thể chọn chức năng mã hóa, chương trình sẽ cho người dùng nhập mật khẩu để mã hóa/giải mã ảnh. Sau khi mã hóa dữ liệu ảnh thì sẽ có ảnh mặc định của ứng dụng để thay thế và người dùng vẫn có thể xem được thông tin như ngày tạo, tên,... để có thể thuận tiện cho việc nhớ mật khẩu"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="- Chức năng xóa sẽ có 3 lựa chọn:"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="  - 'Xóa mặc định': Người dùng có thể phục hồi qua chức phục hồi của ứng dụng"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="  - 'Xóa tạm thời': Người dùng cần có công cụ đặc biệt để có thể phục hồi ảnh"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="  - 'Xóa vĩnh viễn': Ảnh sẽ được xóa hoàn toàn và không thể phục hồi với bất kỳ phương pháp nào"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="- 'Phục hồi ảnh' trong 'Tập tin của bạn' là chức năng giúp cho người dùng phục hồi lại những tấm ảnh đã bị xóa bởi chức năng 'Xóa mặc định'"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="- 'Tái cấu trúc' Khi người dùng sử dụng một thời gian dài thì nên sử dụng tính năng này để có thể loại bỏ những thông tin rác, tiết kiệm bộ nhớ"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tính năng 'Ẩn dữ liệu' sẽ giúp người dùng ẩn giấu những thông tin dạng văn bản vào bên trong ảnh mà không thay đổi hình ảnh hiển thị. Bên cạnh đó tính năng còn có thể trích xuất thông tin đó từ những tấm ảnh mà bạn đã ẩn dữ liệu"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Để phục hồi dữ liệu trên điện thoại android vào 'Phục hồi ảnh' ở màn hình ứng dụng và chọn ảnh để phục hồi những tấm ảnh đã bị xóa"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"/>
+
+        </LinearLayout>
+    </ScrollView>
+</RelativeLayout>
