@@ -262,7 +262,7 @@ public class ActivityRestore extends AppCompatActivity {
             int pos = fileManager.byteArrayToInt(entry.getDataPos());
             int size = fileManager.byteArrayToInt(entry.getSize());
             byte[] data = fileManager.readImageFileData(raf, pos, size);
-            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+            bitmap = fileManager.decodeSampledBitmapFromData(data, 1500, 1500);
         } catch (IOException e) {
             e.printStackTrace();
         }

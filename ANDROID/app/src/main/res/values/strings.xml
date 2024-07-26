@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MHQLTT</string>
+    <string name="app_name">PPHV</string>
     <string-array name="spinner_items">
         <item>Mặc định</item>
         <item>Mới nhất</item>

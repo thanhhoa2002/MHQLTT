@@ -1,6 +1,8 @@
 package com.example.mhqltt;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -828,4 +830,39 @@ public class FileManager {
             return Integer.compare(day1, day2);
         }
     }
+
+    public Bitmap decodeSampledBitmapFromData(byte[] data, int reqWidth, int reqHeight) {
+        // Bước 1: Đọc kích thước ảnh mà không tải nó vào bộ nhớ
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+        // Bước 2: Tính toán inSampleSize để giảm kích thước ảnh
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Bước 3: Đọc ảnh thật với inSampleSize đã tính toán
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeByteArray(data, 0, data.length, options);
+    }
+
+    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Kích thước ảnh gốc
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            // Tính toán tỷ lệ mẫu
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Tăng inSampleSize cho đến khi ảnh giảm xuống dưới kích thước yêu cầu
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
 }
