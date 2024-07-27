@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -63,10 +64,12 @@ public class ActivityHidden extends AppCompatActivity {
     }
 
     private void openImagePicker(int requestCode) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/png"); // Cho phép chọn bất kỳ định dạng ảnh nào
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.setType("image/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(Intent.createChooser(intent, "Select Image"), requestCode);
+        String[] mimeTypes = {"image/png"};
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        startActivityForResult(intent, requestCode);
     }
 
     @Override
@@ -74,10 +77,16 @@ public class ActivityHidden extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK && data != null) {
             Uri selectedImageUri = data.getData();
-            if (selectedImageUri != null) {
-                handleImageSelection(requestCode, selectedImageUri);
+            String mimeType = getContentResolver().getType(selectedImageUri);
+
+            if ("image/png".equals(mimeType)) {
+                if (selectedImageUri != null) {
+                    handleImageSelection(requestCode, selectedImageUri);
+                } else {
+                    Toast.makeText(this, "Failed to retrieve image", Toast.LENGTH_SHORT).show();
+                }
             } else {
-                Toast.makeText(this, "Failed to retrieve image", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please select a PNG image.", Toast.LENGTH_SHORT).show();
             }
         }
     }
