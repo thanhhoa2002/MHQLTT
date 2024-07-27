@@ -2,6 +2,7 @@ package com.example.mhqltt;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -22,8 +24,8 @@ import androidx.core.content.ContextCompat;
 import java.io.IOException;
 
 public class ActivityHidden extends AppCompatActivity {
-    private static final int REQUEST_IMAGE_HIDDEN = 1;
-    private static final int REQUEST_IMAGE_CLEAR = 2;
+    private static final int REQUEST_IMAGE_HIDDEN = 2;
+    private static final int REQUEST_IMAGE_CLEAR = 3;
     private static final int REQUEST_PERMISSIONS = 100;
 
     @Override
@@ -64,11 +66,7 @@ public class ActivityHidden extends AppCompatActivity {
     }
 
     private void openImagePicker(int requestCode) {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.setType("image/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        String[] mimeTypes = {"image/png"};
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, requestCode);
     }
 
@@ -77,16 +75,10 @@ public class ActivityHidden extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK && data != null) {
             Uri selectedImageUri = data.getData();
-            String mimeType = getContentResolver().getType(selectedImageUri);
-
-            if ("image/png".equals(mimeType)) {
-                if (selectedImageUri != null) {
-                    handleImageSelection(requestCode, selectedImageUri);
-                } else {
-                    Toast.makeText(this, "Failed to retrieve image", Toast.LENGTH_SHORT).show();
-                }
+            if (selectedImageUri != null) {
+                handleImageSelection(requestCode, selectedImageUri);
             } else {
-                Toast.makeText(this, "Please select a PNG image.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Failed to retrieve image", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -128,23 +120,40 @@ public class ActivityHidden extends AppCompatActivity {
         builder.show();
     }
 
+    private boolean isPng(Uri uri) {
+        String extension = "";
+        String scheme = uri.getScheme();
+        if (scheme.equals(ContentResolver.SCHEME_CONTENT)) {
+            MimeTypeMap mime = MimeTypeMap.getSingleton();
+            extension = mime.getExtensionFromMimeType(getContentResolver().getType(uri));
+        } else {
+            String path = uri.getPath();
+            extension = MimeTypeMap.getFileExtensionFromUrl(path);
+        }
+        return "png".equalsIgnoreCase(extension);
+    }
 
     private void handleImageSelection(int requestCode, Uri selectedImageUri) {
         if (selectedImageUri != null) {
-            if (requestCode == REQUEST_IMAGE_HIDDEN) {
-                showMessageInputDialog(selectedImageUri, requestCode);
-            } else if (requestCode == REQUEST_IMAGE_CLEAR) {
-                try {
-                    String message = Steganography.extractHiddenMessage(getContentResolver(), selectedImageUri);
-                    Toast.makeText(this, "Extracted message: " + message, Toast.LENGTH_LONG).show();
-                } catch (IOException e) {
-                    Toast.makeText(this, "Error extracting message: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            if (isPng(selectedImageUri)) {
+                if (requestCode == REQUEST_IMAGE_HIDDEN) {
+                    showMessageInputDialog(selectedImageUri, requestCode);
+                } else if (requestCode == REQUEST_IMAGE_CLEAR) {
+                    try {
+                        String message = Steganography.extractHiddenMessage(getContentResolver(), selectedImageUri);
+                        Toast.makeText(this, "Extracted message: " + message, Toast.LENGTH_LONG).show();
+                    } catch (IOException e) {
+                        Toast.makeText(this, "Error extracting message: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 }
+            } else {
+                Toast.makeText(this, "The selected image is not in PNG format.", Toast.LENGTH_SHORT).show();
             }
         } else {
             Toast.makeText(this, "Failed to get real path from URI", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
     @Override
