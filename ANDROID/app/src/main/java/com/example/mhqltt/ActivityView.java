@@ -76,7 +76,12 @@ public class ActivityView extends AppCompatActivity {
 
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 8;
-        bitmapCache = new LruCache<>(cacheSize);
+        bitmapCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                return bitmap.getByteCount() / 1024; // Tính kích thước theo KB
+            }
+        };
 
         spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -263,15 +268,15 @@ public class ActivityView extends AppCompatActivity {
     }
 
     private void showImageDialog(Context context, DirectoryEntry entry) {
+        Bitmap bitmap = null;
         if (Arrays.equals(entry.getEncrypt(), fileManager.stringToByteArray("0"))) {
             File dir = getFilesDir();
             File file = new File(dir, ".NEW");
-            Bitmap bitmap = null;
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                 int pos = fileManager.byteArrayToInt(entry.getDataPos());
                 int size = fileManager.byteArrayToInt(entry.getSize());
                 byte[] data = fileManager.readImageFileData(raf, pos, size);
-                bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                bitmap = fileManager.decodeSampledBitmapFromData(data, 1500, 1500); // Kích thước mục tiêu lớn hơn để xem chi tiết hơn
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -299,28 +304,23 @@ public class ActivityView extends AppCompatActivity {
         ImageView imageView = dialogView.findViewById(R.id.dialogImageView);
         Button encryptButton = dialogView.findViewById(R.id.encrypt_button);
         Button decryptButton = dialogView.findViewById(R.id.decrypt_button);
-        Button infImage= dialogView.findViewById(R.id.informationImage);
+        Button infImage = dialogView.findViewById(R.id.informationImage);
 
         imageView.setImageBitmap(bitmap);
 
         builder.setView(dialogView);
 
         AlertDialog dialog = builder.create();
+
         infImage.setOnClickListener(v -> {
-            // Lấy thông tin từ DirectoryEntry
+            // Hiển thị thông tin hình ảnh
             String name = "Tên ảnh: " + fileManager.byteArrayToString(entry.getName());
             String extension = "Loại: " + fileManager.byteArrayToString(entry.getExtendedName());
-            int[] date1 = new int[4];
+            int day = entry.getDateCreate()[0];
+            int month = entry.getDateCreate()[1];
+            int year = (entry.getDateCreate()[2] & 0xFF) << 8 | (entry.getDateCreate()[3] & 0xFF);
+            String creationDate = "Ngày tạo: " + day + "/" + month + "/" + year;
 
-            for(int i=0;i<4;i++)
-            {
-                date1[i]=entry.getDateCreate()[i];
-            }
-            int day = date1[0];
-            int month1 = date1[1];
-            int year1 = (date1[2] & 0xFF) << 8 | (date1[3] & 0xFF);
-            String creationDate="Ngày tạo: "+day+"/"+month1+"/"+year1;
-            // Tạo và hiển thị ImageInfoDialogFragment
             if (context instanceof FragmentActivity) {
                 FragmentActivity activity = (FragmentActivity) context;
                 ImageInfoDialogFragment dialogFragment = ImageInfoDialogFragment.newInstance(name, extension, creationDate);
@@ -404,4 +404,5 @@ public class ActivityView extends AppCompatActivity {
     private interface PasswordCallback {
         void onPasswordEntered(String password);
     }
+
 }

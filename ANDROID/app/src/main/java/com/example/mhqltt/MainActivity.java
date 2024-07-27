@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button recovery=findViewById(R.id.btn_recovery);
-       recovery.setOnClickListener(new View.OnClickListener() {
+        recovery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(MainActivity.this, ActivityRecovery.class);
@@ -56,7 +56,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-       Button guide=findViewById(R.id.btn_guide);
+        Button hidden = findViewById(R.id.btn_hidden);
+        hidden.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this, ActivityHidden.class);
+                startActivity(intent);
+            }
+        });
+
+        Button guide=findViewById(R.id.btn_guide);
         guide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
