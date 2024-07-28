@@ -42,9 +42,9 @@ def extract_hidden_message(image_path):
     return message
 
 # Usage
-image_path = "output_sanitized.png"
-try:
-    hidden_message = extract_hidden_message(image_path)
-    print(hidden_message)
-except ValueError as e:
-    print(f"An error occurred: {e}")
+# image_path = "output_sanitized.png"
+# try:
+#     hidden_message = extract_hidden_message(image_path)
+#     print(hidden_message)
+# except ValueError as e:
+#     print(f"An error occurred: {e}")

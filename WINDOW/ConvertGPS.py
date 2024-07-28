@@ -4,18 +4,18 @@ from geopy.geocoders import Nominatim  # install geopy
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 import time
 
-def reverse_geocode(lat, lon, retries=3, delay=2):
-    geolocator = Nominatim(user_agent="myGeocoder", timeout=10)  # Thời gian chờ là 10 giây
+def reverse_geocode(lat, lon, retries=3, delay=10):
+    geolocator = Nominatim(user_agent="vinhphatphonghoa", timeout=40)  
     for i in range(retries):
         try:
             location = geolocator.reverse((lat, lon), exactly_one=True)
             return location.address if location else "Không tìm thấy địa chỉ cho tọa độ này."
-        except (GeocoderTimedOut, GeocoderServiceError):
+        except (GeocoderServiceError):
             print(f"Thử lại lần {i + 1}/{retries} sau {delay} giây...")
             time.sleep(delay)
     return "Lỗi kết nối hoặc dịch vụ không khả dụng."
 
-def get_exif_data(image_path):
+def get_exif_data(image_path):  #vị trí + thời gian chụp
     image = Image.open(image_path)
     exif_data = image._getexif()
     gps_data = {}
@@ -48,8 +48,7 @@ def gps_data_to_coordinates(gps_data):
             return lat, lon
     return None
 
-
-def main(image_path):
+def convert_gps(image_path):
     # Lấy dữ liệu GPS từ tệp JPEG
     gps_data = get_exif_data(image_path)
     
@@ -69,8 +68,8 @@ def main(image_path):
     else:
         print("Không có dữ liệu GPS trong tệp JPEG này.")
 
-# Đường dẫn của tệp JPEG
-image_path = "IMG_20240706_144114.jpg"
+# # Đường dẫn của tệp JPEG
+# image_path = "TESTJPGwithEXIF.JPG"
 
-# Chạy chương trình chính
-main(image_path)
+# # Chạy chương trình chính
+# convert_gps(image_path)

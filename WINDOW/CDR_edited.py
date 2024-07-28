@@ -19,9 +19,9 @@ def sanitize_lsb(input_path, output_path):
     image.save(output_path, "PNG")
 
 # Sử dụng ví dụ
-input_png_path = "imageTestGPS.JPG"
-output_png_path = "output_sanitized.png"
+# input_png_path = "imageTestGPS.JPG"
+# output_png_path = "output_sanitized.png"
 
-sanitize_lsb(input_png_path, output_png_path)
+# sanitize_lsb(input_png_path, output_png_path)
 
-print(f"Ảnh PNG đã được làm sạch và lưu tại: {output_png_path}")
+# print(f"Ảnh PNG đã được làm sạch và lưu tại: {output_png_path}")

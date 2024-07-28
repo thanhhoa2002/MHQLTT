@@ -22,12 +22,12 @@ def sanitize_image(input_path, output_path):
         image.save(output_path, "png")
 
 # Sử dụng ví dụ
-input_jpg_path = "imageTestGPS.JPG"
-output_jpg_path = "TEST.png"
+# input_jpg_path = "imageTestGPS.JPG"
+# output_jpg_path = "TEST.png"
 
 
-sanitize_image(input_jpg_path, output_jpg_path)
+# sanitize_image(input_jpg_path, output_jpg_path)
 
 
-print(f"Ảnh JPEG đã được làm sạch và lưu tại: {output_jpg_path}")
+# print(f"Ảnh JPEG đã được làm sạch và lưu tại: {output_jpg_path}")
 

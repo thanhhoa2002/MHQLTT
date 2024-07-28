@@ -1,8 +1,12 @@
 import pytsk3
-import sys
+import os
 
 def open_image(image_file):
-    """Open an image file and return a TSK image handle."""
+    """Mở tệp ảnh và trả về một đối tượng TSK image."""
+    if not os.path.isfile(image_file):
+        print(f"Lỗi: Tệp {image_file} không tồn tại.")
+        return None
+    
     img_info = pytsk3.Img_Info(image_file)
     return img_info
 
@@ -36,8 +40,8 @@ def analyze_ext4(img_info):
     root_dir = fs_info.open_dir(path="/")
 
     # Print the superblock information
-    print("Block Size: ", fs_info.info.block_size)
-    print("Total Blocks: ", fs_info.info.block_count)
+    print("Kích thước block: ", fs_info.info.block_size)
+    print("Tổng số block: ", fs_info.info.block_count)
 
     # Build the directory tree
     directory_tree = traverse_directory(fs_info, root_dir)
