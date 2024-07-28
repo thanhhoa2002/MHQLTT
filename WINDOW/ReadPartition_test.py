@@ -1,8 +1,12 @@
 import pytsk3
-import sys
+import os
 
 def open_image(image_file):
-    """Open an image file and return a TSK image handle."""
+    """Mở tệp ảnh và trả về một đối tượng TSK image."""
+    if not os.path.isfile(image_file):
+        print(f"Lỗi: Tệp {image_file} không tồn tại.")
+        return None
+    
     img_info = pytsk3.Img_Info(image_file)
     return img_info
 
@@ -36,33 +40,15 @@ def analyze_ext4(img_info):
     root_dir = fs_info.open_dir(path="/")
 
     # Print the superblock information
-    print("Block Size: ", fs_info.info.block_size)
-    print("Total Blocks: ", fs_info.info.block_count)
+    print("Kích thước block: ", fs_info.info.block_size)
+    print("Tổng số block: ", fs_info.info.block_count)
 
     # Build the directory tree
     directory_tree = traverse_directory(fs_info, root_dir)
     
     return directory_tree
 
-def main(image_path):
-    img_info = open_image(image_path)
-    directory_tree = analyze_ext4(img_info)
-    print("Directory Tree:")
-    print_directory_tree(directory_tree)
-
-    print("------------------------------------------------------")
-    file_name = "yuta.jpeg"
-    file_info = find_file_in_tree(directory_tree, file_name)
-    if file_info:
-        path, blocks = file_info
-        data = extract_data_from_blocks(img_info, blocks)
-        
-        # Write data to a file with the same name
-        with open(file_name, 'wb') as f:
-            f.write(data)
-        print(f"\nExtracted data written to '{file_name}'")
-    else:
-        print(f"\nFile '{file_name}' not found in the directory tree.")
+    
 
 def print_directory_tree(directory_tree, indent=0):
     """Print the directory tree."""
@@ -97,6 +83,11 @@ def find_file_in_tree(directory_tree, file_name):
             if key == file_name:
                 return path, blocks
     return None
+
+
+def main(image_path):
+    img_info = open_image(image_path)
+    
 
 # Replace 'path_to_image_file.img' with the actual path to your .img file
 main('D:\Disks\\30mar.img')
